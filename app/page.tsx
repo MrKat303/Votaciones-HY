@@ -48,7 +48,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/admin" className="group">
+          <Link href="/admin" className="group hidden sm:block">
             <div className="h-full bg-white/5 p-4 sm:p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-white/5 hover:bg-white/15 hover:border-white/20 transition-all flex flex-col items-center gap-2 md:gap-4 text-center relative overflow-hidden shadow-2xl backdrop-blur-sm">
               <div className="absolute top-0 left-0 w-full h-1 bg-white/20" />
               <div className="w-10 h-10 md:w-16 md:h-16 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300">
