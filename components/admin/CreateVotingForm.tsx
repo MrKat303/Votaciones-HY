@@ -126,23 +126,23 @@ export function CreateVotingForm() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
-                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Tiempo Límite (Min)</label>
+                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Mín. 5 Minutos)</label>
                             <input
                                 type="number"
                                 min="5"
                                 value={duration}
-                                onChange={(e) => setDuration(Math.max(5, parseInt(e.target.value)))}
+                                onChange={(e) => setDuration(parseInt(e.target.value) || 5)}
                                 className="w-full bg-transparent text-2xl font-black text-[#FFC100] outline-none"
                             />
                         </div>
                         {type === "BOOLEAN" && (
                             <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2 animate-fade">
-                                <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Capacidad (Asientos)</label>
+                                <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Asientos (Quorum)</label>
                                 <input
                                     type="number"
                                     min="1"
                                     value={maxVoters}
-                                    onChange={(e) => setMaxVoters(parseInt(e.target.value))}
+                                    onChange={(e) => setMaxVoters(parseInt(e.target.value) || 100)}
                                     className="w-full bg-transparent text-2xl font-black text-white outline-none"
                                 />
                             </div>

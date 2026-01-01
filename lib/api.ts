@@ -253,6 +253,14 @@ export const api = {
         return { success: true, message: "Voto registrado" };
     },
 
+    setHideResults: async (id: string, hide: boolean): Promise<void> => {
+        const { error } = await supabase
+            .from('polls')
+            .update({ hide_results: hide })
+            .eq('id', id);
+        if (error) throw error;
+    },
+
     deletePoll: async (id: string): Promise<void> => {
         await supabase.from('polls').delete().eq('id', id);
     },

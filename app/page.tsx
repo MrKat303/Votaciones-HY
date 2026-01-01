@@ -7,14 +7,14 @@ export default function Home() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-[#3A1B4E] text-white p-6 overflow-hidden" style={{ fontFamily: "var(--font-poppins), sans-serif" }}>
 
-      <main className="relative z-10 w-full max-w-4xl flex flex-col items-center gap-12 animate-fade">
+      <main className="relative z-10 w-full max-w-4xl flex flex-col items-center gap-10 animate-fade">
 
-        {/* Logo y Header */}
-        <div className="flex flex-col items-center gap-8 text-center">
-          <div className="relative w-40 h-40">
+        {/* Header: Logo y Título con armonía mejorada */}
+        <div className="flex flex-col items-center gap-6 text-center">
+          <div className="relative w-48 h-48 md:w-60 md:h-60">
             <Image
               src="/Logo.svg"
-              alt="HiveYoung Logo"
+              alt="Logo"
               fill
               className="object-contain"
               priority
@@ -26,8 +26,8 @@ export default function Home() {
               SISTEMA DE<br />
               ELECCIONES
             </h1>
-            <p className="text-sm md:text-base font-bold text-white/50 max-w-lg mx-auto pt-4 leading-relaxed tracking-tight">
-              Plataforma de escrutinio institucional <span className="text-white/80">version V2.9</span>
+            <p className="text-xs md:text-sm font-bold text-white/40 max-w-lg mx-auto pt-2 leading-relaxed tracking-[0.2em] uppercase">
+              Plataforma de escrutinio institucional <span className="text-white/60">version V2.9</span>
             </p>
           </div>
         </div>
@@ -35,10 +35,10 @@ export default function Home() {
         {/* Acciones Principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
           <Link href="/votar" className="group">
-            <div className="h-full bg-white/5 p-10 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-all flex flex-col items-center gap-6 text-center relative overflow-hidden shadow-2xl">
+            <div className="h-full bg-white/5 p-8 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-all flex flex-col items-center gap-6 text-center relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#FFC100]" />
-              <div className="w-16 h-16 bg-[#FFC100] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <LucideVote className="w-8 h-8 text-[#3A1B4E]" />
+              <div className="w-14 h-14 bg-[#FFC100] rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <LucideVote className="w-7 h-7 text-[#3A1B4E]" />
               </div>
               <div className="space-y-1">
                 <span className="block font-black text-2xl tracking-tighter uppercase">ENTRAR A VOTAR</span>
@@ -48,10 +48,10 @@ export default function Home() {
           </Link>
 
           <Link href="/admin" className="group hidden md:block">
-            <div className="h-full bg-white/5 p-10 rounded-[2.5rem] border border-white/5 hover:bg-white/10 transition-all flex flex-col items-center gap-6 text-center relative overflow-hidden shadow-2xl">
+            <div className="h-full bg-white/5 p-8 rounded-[2.5rem] border border-white/5 hover:bg-white/10 transition-all flex flex-col items-center gap-6 text-center relative overflow-hidden shadow-2xl">
               <div className="absolute top-0 left-0 w-full h-1 bg-white/20" />
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-white transition-all">
-                <LucideLayoutDashboard className="w-8 h-8 text-white group-hover:text-[#3A1B4E] transition-colors" />
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center group-hover:bg-white transition-all">
+                <LucideLayoutDashboard className="w-7 h-7 text-white group-hover:text-[#3A1B4E] transition-colors" />
               </div>
               <div className="space-y-1 text-white">
                 <span className="block font-black text-2xl tracking-tighter uppercase">ADMINISTRADOR</span>
@@ -61,14 +61,9 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Footer */}
-        <footer className="pt-8 flex flex-col items-center gap-4">
+        {/* Separador sutil */}
+        <footer className="pt-8 flex flex-col items-center">
           <div className="w-12 h-0.5 bg-white/10 rounded-full" />
-          <div className="flex flex-col items-center gap-1 text-center">
-            <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.8em]">
-              HiveYoung Tech Solutions 2026
-            </p>
-          </div>
         </footer>
       </main>
     </div>

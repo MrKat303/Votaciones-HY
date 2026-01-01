@@ -59,14 +59,14 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
                 {poll.type === "WORDCLOUD" ? (
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFC100]/60">Tu Respuesta</label>
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2EB67D]">Tu Respuesta</label>
                             <input
                                 type="text"
                                 maxLength={20}
                                 value={wordInput}
                                 onChange={(e) => setWordInput(e.target.value)}
                                 placeholder="Escribe una palabra..."
-                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black outline-none focus:border-[#FFC100] transition-all"
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black outline-none focus:border-[#2EB67D] transition-all"
                             />
                         </div>
                         <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest text-center">Máximo 20 caracteres por envío</p>
@@ -87,7 +87,7 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
                 )}
 
                 <button
-                    className="w-full h-16 bg-[#FFC100] text-[#3A1B4E] rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:grayscale"
+                    className="w-full h-16 bg-[#2EB67D] text-[#1A0826] rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:grayscale"
                     disabled={(poll.type === 'WORDCLOUD' ? !wordInput.trim() : !selectedOption) || isSubmitting}
                     onClick={handleVote}
                 >
@@ -101,10 +101,7 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
                     )}
                 </button>
 
-                <div className="flex items-center justify-center gap-2 pt-2 opacity-20">
-                    <LucideShield className="w-3 h-3" />
-                    <span className="text-[9px] font-black uppercase tracking-[0.3em]">Sesión Segura HiveYoung</span>
-                </div>
+
             </div>
         </div>
     );

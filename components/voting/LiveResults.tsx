@@ -121,8 +121,8 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 </div>
                 {(!poll.wordVotes || poll.wordVotes.length === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade">
-                        <div className="w-12 h-12 rounded-full border-4 border-[#3A1B4E]/10 border-t-[#3A1B4E] animate-spin" />
-                        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-[#3A1B4E]/40">Capturando ideas...</p>
+                        <div className="w-12 h-12 rounded-full border-4 border-white/5 border-t-white/40 animate-spin" />
+                        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-white/20">Capturando ideas...</p>
                     </div>
                 )}
             </div>
@@ -134,7 +134,12 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             name: opt.text,
             value: opt.votes || 0,
             color: poll.type === 'BOOLEAN'
-                ? (opt.text.toUpperCase() === 'SÍ' ? '#2EB67D' : opt.text.toUpperCase() === 'ABSTENCIÓN' ? '#FFC100' : '#C22359')
+                ? (() => {
+                    const t = opt.text.toUpperCase();
+                    if (t.includes('SÍ') || t.includes('FAVOR')) return '#2EB67D';
+                    if (t.includes('ABSTENCIÓN') || t.includes('ABSTENCION')) return '#FFC100';
+                    return '#C22359';
+                })()
                 : (opt.color || `hsl(${(i * 360) / poll.options.length}, 70%, 50%)`)
         };
     }).sort((a, b) => b.value - a.value);

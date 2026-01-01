@@ -14,11 +14,16 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
         const centerY = 280;
 
         const rows = Math.max(5, Math.ceil(totalSeats / 20));
+
+        // Dynamically adjust radius based on seat count for better visual density
+        const baseRadius = totalSeats < 20 ? 100 : 60;
+        const rowSpacing = totalSeats < 20 ? 35 : 22;
+
         const generatedSeats = [];
 
         let seatCount = 0;
         for (let row = 0; row < rows; row++) {
-            const radius = 60 + (row * 22);
+            const radius = baseRadius + (row * rowSpacing);
             const circumference = Math.PI * radius;
             const seatWidth = 14;
             const seatsInRow = Math.min(
@@ -46,8 +51,8 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
 
         const getBooleanColor = (text: string) => {
             const lower = text.toLowerCase();
-            if (lower.includes("favor")) return "#2EB67D";
-            if (lower.includes("contra")) return "#9333EA";
+            if (lower.includes("favor") || lower === "sí" || lower === "si") return "#2EB67D";
+            if (lower.includes("contra") || lower === "no") return "#C22359";
             if (lower.includes("abst")) return "#FFC100";
             return "#529CE8";
         };
@@ -71,11 +76,12 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
     }, [poll]);
 
     return (
-        <div className="w-full flex flex-col items-center">
-            <div className="relative w-full max-w-[500px] aspect-[5/3]">
-                <svg viewBox="0 0 500 300" className="w-full h-full drop-shadow-xl bg-white/5 rounded-2xl border border-white/10">
-                    {/* Podium */}
-                    <path d="M 220 280 L 280 280 L 270 260 L 230 260 Z" fill="#FFC100" opacity="0.4" />
+        <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="relative w-full max-w-[600px] aspect-[16/9]">
+                <svg viewBox="0 0 500 300" className="w-full h-full drop-shadow-2xl">
+                    {/* Podium / Mesa - Rosa #FFC4D4 */}
+                    <path d="M 210 280 L 290 280 L 280 255 L 220 255 Z" fill="#FFC4D4" />
+                    <circle cx="250" cy="255" r="8" fill="#FFC4D4" />
 
                     {seats.map((seat, index) => (
                         <circle
