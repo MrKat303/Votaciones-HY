@@ -9,7 +9,7 @@ interface LiveResultsProps {
     compact?: boolean;
 }
 
-const WordCloudItem = ({ wv, index, compact }: { wv: WordVote, index: number, compact: boolean }) => {
+const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: number, style: React.CSSProperties, compact: boolean }) => {
     const [prevCount, setPrevCount] = useState(wv.count);
     const [isPulsing, setIsPulsing] = useState(false);
 
@@ -30,31 +30,35 @@ const WordCloudItem = ({ wv, index, compact }: { wv: WordVote, index: number, co
     const hash = useMemo(() => wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0), [wv.text]);
 
     const rotation = useMemo(() => {
+        // En Mentimeter las palabras más grandes suelen ser horizontales, las pequeñas rotan
         if (index === 0) return 'rotate-0';
-        return hash % 12 === 0 ? '-rotate-90' : hash % 15 === 0 ? 'rotate-90' : 'rotate-0';
+        const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
+        return rotOptions[hash % rotOptions.length];
     }, [hash, index]);
 
     const fontSize = useMemo(() => {
-        const baseSize = compact ? 12 : 18;
-        const growthFactor = compact ? 4 : 14;
-        const max = compact ? 45 : 95;
+        const baseSize = compact ? 10 : 16;
+        const growthFactor = compact ? 5 : 18;
+        const max = compact ? 40 : 110;
         return Math.min(baseSize + (wv.count * growthFactor), max);
     }, [wv.count, compact]);
 
     return (
         <span
             className={`
-                inline-block font-black tracking-tighter transition-all duration-700 ease-out word-glow animate-fade organic-float
+                absolute font-black tracking-tighter transition-all duration-1000 ease-in-out word-glow animate-fade organic-float
                 ${rotation}
                 ${isPulsing ? 'animate-pulse-word' : ''}
+                select-none
             `}
             style={{
+                ...style,
                 fontSize: `${fontSize}px`,
                 color: COLORS[hash % COLORS.length],
-                padding: compact ? '0.1em 0.2em' : '0.15em 0.3em',
-                lineHeight: '0.85',
-                animationDelay: `${index * 50}ms`,
-                filter: `drop-shadow(0 4px 6px rgba(0,0,0,${0.02 + (wv.count * 0.01)}))`
+                animationDelay: `${index * 80}ms`,
+                filter: `drop-shadow(0 4px 10px rgba(0,0,0,${0.05 + (wv.count * 0.02)}))`,
+                whiteSpace: 'nowrap',
+                transform: `${style.transform} ${rotation === 'rotate-90' ? 'rotate(90deg)' : rotation === '-rotate-90' ? 'rotate(-90deg)' : ''}`
             }}
         >
             {wv.text}
@@ -68,28 +72,57 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
             [poll.wordVotes]);
 
+        // Algoritmo de Espiral de Arquímedes con Jitter (Ruido) para posicionamiento natural
+        const positionedWords = useMemo(() => {
+            const centerX = 50;
+            const centerY = 50;
+
+            return sortedWords.map((wv, i) => {
+                if (i === 0) return { wv, style: { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' } };
+
+                // Deterministic Jitter based on word text
+                const jitterX = (wv.text.length % 5) - 2;
+                const jitterY = (wv.text.charCodeAt(0) % 5) - 2;
+
+                const angle = 0.6 * i;
+                const spread = compact ? 4 : 7;
+                const x = centerX + (spread * angle * Math.cos(angle)) + jitterX;
+                const y = centerY + (0.6 * spread * angle * Math.sin(angle)) + jitterY;
+
+                return {
+                    wv,
+                    style: {
+                        left: `${x}%`,
+                        top: `${y}%`,
+                        transform: 'translate(-50%, -50%)'
+                    }
+                };
+            });
+        }, [sortedWords, compact]);
+
         return (
             <div
-                className="absolute inset-0 flex flex-wrap items-center justify-center p-12 overflow-hidden"
+                className="absolute inset-0 overflow-hidden"
                 style={{
                     fontFamily: "var(--font-poppins), sans-serif",
                     backgroundColor: "#F4EDE4",
-                    alignContent: 'center',
-                    gap: compact ? '1rem' : '2rem 3.5rem'
                 }}
             >
-                {sortedWords.map((wv, i) => (
-                    <WordCloudItem
-                        key={wv.text}
-                        wv={wv}
-                        index={i}
-                        compact={compact}
-                    />
-                ))}
+                <div className="relative w-full h-full">
+                    {positionedWords.map((item, i) => (
+                        <WordCloudItem
+                            key={item.wv.text}
+                            wv={item.wv}
+                            index={i}
+                            style={item.style}
+                            compact={compact}
+                        />
+                    ))}
+                </div>
                 {(!poll.wordVotes || poll.wordVotes.length === 0) && (
-                    <div className="flex flex-col items-center gap-4 animate-fade">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade">
                         <div className="w-12 h-12 rounded-full border-4 border-[#3A1B4E]/10 border-t-[#3A1B4E] animate-spin" />
-                        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-[#3A1B4E]/40">Esperando conceptos...</p>
+                        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-[#3A1B4E]/40">Capturando ideas...</p>
                     </div>
                 )}
             </div>
@@ -102,7 +135,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             value: opt.votes || 0,
             color: poll.type === 'BOOLEAN'
                 ? (opt.text.toUpperCase() === 'SÍ' ? '#2EB67D' : opt.text.toUpperCase() === 'ABSTENCIÓN' ? '#FFC100' : '#C22359')
-                : (opt.color as string || `hsl(${(i * 360) / poll.options.length}, 70%, 50%)`)
+                : (opt.color || `hsl(${(i * 360) / poll.options.length}, 70%, 50%)`)
         };
     }).sort((a, b) => b.value - a.value);
 
@@ -142,7 +175,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 </PieChart>
             </ResponsiveContainer>
 
-            {data[0].value > 0 && (
+            {data.length > 0 && data[0].value > 0 && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                     <span className="block text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Tendencia</span>
                     <span className="text-3xl font-black text-white tabular-nums drop-shadow-lg">
@@ -152,7 +185,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 </div>
             )}
 
-            {data[0].value === 0 && (
+            {(data.length === 0 || data[0].value === 0) && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-[-10px]">
                     <span className="text-[8px] font-bold text-white/30 uppercase tracking-[0.5em]">Esperando...</span>
                     <span className={compact ? "text-xl font-black" : "text-3xl font-black"}>0</span>

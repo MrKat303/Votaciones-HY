@@ -7,7 +7,8 @@ import { LiveResults } from "@/components/voting/LiveResults";
 import { CongressHemicycle } from "@/components/voting/CongressHemicycle";
 import { CountdownTimer } from "@/components/voting/CountdownTimer";
 import Link from "next/link";
-import { LucideBarChart3, LucideUsers, LucideRefreshCw, LucideLayoutGrid, LucidePieChart, LucideExternalLink, LucidePlay, LucideHistory, LucideArchive, LucideTrash2, LucideAlertCircle, LucideType, LucideX } from "lucide-react";
+import { LucideBarChart3, LucideUsers, LucideRefreshCw, LucideLayoutGrid, LucidePieChart, LucideExternalLink, LucidePlay, LucideHistory, LucideArchive, LucideTrash2, LucideAlertCircle, LucideType, LucideX, LucideQrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function AdminPage() {
     const [polls, setPolls] = useState<Poll[]>([]);
@@ -107,6 +108,21 @@ export default function AdminPage() {
                                 </button>
                             </div>
 
+                            {/* QR Code Flotante para Votación */}
+                            <div className="absolute top-8 right-8 group/qr pointer-events-auto">
+                                <div className="bg-white p-3 rounded-2xl shadow-2xl border-4 border-[#3A1B4E] transition-all hover:scale-110">
+                                    <QRCodeSVG
+                                        value={`${window.location.origin}/votar`}
+                                        size={100}
+                                        includeMargin={false}
+                                        fgColor="#3A1B4E"
+                                    />
+                                    <div className="mt-2 text-center">
+                                        <p className="text-[8px] font-black uppercase text-[#3A1B4E] tracking-tighter">Escanea para Votar</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Mini Temporizador Flotante */}
                             <div className="absolute bottom-8 right-8 bg-[#3A1B4E] text-[#FFC100] px-6 py-3 rounded-2xl font-mono text-3xl font-black shadow-2xl border-2 border-[#FFC100]/20 flex items-center gap-3">
                                 <div className="w-3 h-3 bg-[#FFC100] rounded-full animate-pulse" />
@@ -130,6 +146,15 @@ export default function AdminPage() {
                                 </div>
 
                                 <div className="flex items-center gap-8">
+                                    <div className="flex items-center gap-4 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
+                                        <div className="bg-white p-1 rounded-sm">
+                                            <QRCodeSVG value={`${window.location.origin}/votar`} size={40} fgColor="#1A0826" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[7px] font-black uppercase tracking-widest text-[#FFC100]">Vota en vivo</span>
+                                            <span className="text-[9px] font-mono text-white/50">{window.location.host}/votar</span>
+                                        </div>
+                                    </div>
                                     {/* Selector de Vista en Fullscreen */}
                                     {currentPoll.type === 'BOOLEAN' && (
                                         <div className="flex bg-white/5 rounded-xl border border-white/10 p-1">
@@ -443,12 +468,26 @@ export default function AdminPage() {
 
                                 {currentPoll.status === "ACTIVE" && (
                                     <div className="p-4 bg-black/10 border-t border-white/5 flex justify-center shrink-0">
-                                        <button
-                                            onClick={() => handleClosePoll(currentPoll.id)}
-                                            className="px-8 py-3 bg-[#C22359] text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:bg-red-700 transition-all flex items-center gap-2"
-                                        >
-                                            Finalizar Votación
-                                        </button>
+                                        <div className="flex items-center gap-4">
+                                            <button
+                                                onClick={() => setFullscreenResults(true)}
+                                                className="px-6 py-3 bg-[#FFC100] text-[#3A1B4E] rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+                                            >
+                                                <LucidePlay className="w-4 h-4 fill-current" /> Modo Transmisión
+                                            </button>
+                                            <div className="bg-white p-2 rounded-xl shadow-inner border border-white/10 group relative cursor-help">
+                                                <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/votar`} size={44} fgColor="#3A1B4E" />
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-[#3A1B4E] text-white p-2 rounded text-[8px] font-black uppercase whitespace-nowrap shadow-2xl z-50">
+                                                    QR para Votantes
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleClosePoll(currentPoll.id)}
+                                                className="px-6 py-3 bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all"
+                                            >
+                                                Finalizar
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
