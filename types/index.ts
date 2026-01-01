@@ -12,6 +12,7 @@ export interface Poll {
   endTime: string | null; // ISO string or null if open
   isActive: boolean;
   totalVotes: number;
+  maxVoters: number; // New field for quorum
 }
 
 export interface VotePayload {

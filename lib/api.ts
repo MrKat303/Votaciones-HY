@@ -1,30 +1,34 @@
 import { Poll, VotePayload, Option } from "@/types";
 
 // In-memory store (lossy on server restart, but works for demo)
-// In a real app, this would be a database.
 let activePoll: Poll | null = null;
 
-// Helper to simulate network delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const api = {
-    createPoll: async (title: string, durationMinutes: number): Promise<Poll> => {
+    createPoll: async (title: string, durationMinutes: number, customOptions?: string[], maxVoters: number = 100): Promise<Poll> => {
         await delay(300);
         const now = new Date();
-        // const endTime = new Date(now.getTime() + durationMinutes * 60000);
+        const endTime = new Date(now.getTime() + durationMinutes * 60000).toISOString();
+
+        // Default options if none provided
+        const optionTexts = customOptions && customOptions.length > 0
+            ? customOptions
+            : ["A favor", "En contra", "Abstención"];
 
         const newPoll: Poll = {
             id: Math.random().toString(36).substr(2, 9),
             title,
-            options: [
-                { id: "a-favor", text: "A favor", votes: 0 },
-                { id: "en-contra", text: "En contra", votes: 0 },
-                { id: "abstencion", text: "Abstención", votes: 0 },
-            ],
+            options: optionTexts.map((text, index) => ({
+                id: `opt-${index}-${Math.random().toString(36).substr(2, 5)}`,
+                text,
+                votes: 0
+            })),
             startTime: now.toISOString(),
-            endTime: null, // Manually closed or logic handled elsewhere
+            endTime: endTime,
             isActive: true,
             totalVotes: 0,
+            maxVoters: maxVoters,
         };
 
         activePoll = newPoll;
@@ -52,14 +56,12 @@ export const api = {
         const option = activePoll.options.find((o) => o.id === payload.optionId);
         if (!option) return { success: false, message: "Opción inválida" };
 
-        // Simulate "Realtime" by mutating state immediately
         option.votes += 1;
         activePoll.totalVotes += 1;
 
         return { success: true, message: "Voto registrado" };
     },
 
-    // For verifying mock state
     resetSystem: async () => {
         activePoll = null;
     }

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/Card";
 
 interface CountdownTimerProps {
     endTime: string | null;
     onExpire?: () => void;
+    className?: string; // Allow overrides
 }
 
-export function CountdownTimer({ endTime, onExpire }: CountdownTimerProps) {
+export function CountdownTimer({ endTime, onExpire, className }: CountdownTimerProps) {
     const [timeLeft, setTimeLeft] = useState<{ m: number; s: number } | null>(null);
 
     useEffect(() => {
@@ -35,14 +35,18 @@ export function CountdownTimer({ endTime, onExpire }: CountdownTimerProps) {
 
     if (!timeLeft) return null;
 
+    // Visual urgency
+    const isUrgent = timeLeft.m === 0 && timeLeft.s < 60;
+
     return (
-        <Card className="flex items-center justify-center p-4 bg-primary/5 border-primary/10">
-            <div className="text-3xl font-bold font-mono text-primary flex items-center gap-2">
-                <span>⏱</span>
-                <span>
-                    {String(timeLeft.m).padStart(2, "0")}:{String(timeLeft.s).padStart(2, "0")}
-                </span>
-            </div>
-        </Card>
+        <div className={`
+      flex items-center gap-2 font-mono text-2xl font-bold tracking-widest
+      ${isUrgent ? 'text-[#C22359] animate-pulse' : ''}
+      ${className}
+    `}>
+            <span>
+                {String(timeLeft.m).padStart(2, "0")}:{String(timeLeft.s).padStart(2, "0")}
+            </span>
+        </div>
     );
 }

@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { Poll } from "@/types";
 import { VotingCard } from "@/components/voting/VotingCard";
 import { LiveResults } from "@/components/voting/LiveResults";
-import { Button } from "@/components/ui/Button";
+import { LucideArrowLeft, LucideShieldCheck, LucideCheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "@/components/voting/CountdownTimer";
 
@@ -16,7 +16,6 @@ export default function VoterPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // 1. Device Fingerprinting
         let id = localStorage.getItem("voter_device_id");
         if (!id) {
             id = Math.random().toString(36).substr(2, 16);
@@ -24,13 +23,11 @@ export default function VoterPage() {
         }
         setVoterId(id);
 
-        // 2. Poll Data & Logic
         const fetchData = async () => {
             try {
                 const active = await api.getActivePoll();
                 setPoll(active);
 
-                // Check if already voted for this specific poll
                 if (active) {
                     const votedKey = `has_voted_${active.id}`;
                     if (localStorage.getItem(votedKey)) {
@@ -43,7 +40,7 @@ export default function VoterPage() {
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 3000); // Poll for updates
+        const interval = setInterval(fetchData, 3000);
         return () => clearInterval(interval);
     }, []);
 
@@ -54,47 +51,69 @@ export default function VoterPage() {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center text-primary">Cargando asamblea...</div>;
+    if (loading) return (
+        <div className="fixed inset-0 bg-[#3A1B4E] flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-[#FFC100] border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     return (
-        <div className="min-h-screen p-4 sm:p-8 max-w-xl mx-auto flex flex-col items-center">
-            <Link href="/" className="self-start mb-6">
-                <span className="text-primary font-bold">← Inicio</span>
+        <div className="fixed inset-0 bg-[#3A1B4E] text-white flex flex-col items-center justify-center p-6 overflow-hidden">
+
+            <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 text-white/20 hover:text-white transition-colors font-black text-[9px] tracking-[0.2em] uppercase group">
+                <LucideArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" /> VOLVER
             </Link>
 
-            <div className="w-full space-y-8">
-                <header className="text-center space-y-2">
-                    <h1 className="text-2xl font-bold text-primary">Sala de Votación</h1>
-                    {poll && poll.isActive && (
-                        <div className="flex justify-center">
-                            <CountdownTimer endTime={poll.endTime} />
-                        </div>
-                    )}
-                </header>
-
+            <div className="w-full max-w-sm space-y-6 animate-fade">
                 {poll && poll.isActive ? (
-                    hasVoted ? (
-                        <div className="space-y-6 animate-fade-in">
-                            <div className="bg-success/10 p-6 rounded-2xl text-center border border-success/20">
-                                <h3 className="text-xl font-bold text-success mb-2">¡Voto Registrado!</h3>
-                                <p className="text-gray-600">Tu participación ha sido guardada.</p>
+                    <>
+                        <div className="text-center space-y-3">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 uppercase tracking-widest text-[8px] font-black text-[#FFC100]/60">
+                                <LucideShieldCheck className="w-2.5 h-2.5" /> Sesión Verificada
                             </div>
-                            <LiveResults poll={poll} />
+                            <h1 className="text-xl font-black uppercase tracking-tight">{poll.title}</h1>
+                            <div className="inline-block bg-white/5 px-4 py-1.5 rounded-lg text-lg font-mono font-black text-[#FFC100]">
+                                <CountdownTimer endTime={poll.endTime} />
+                            </div>
                         </div>
-                    ) : (
-                        <VotingCard
-                            poll={poll}
-                            voterId={voterId}
-                            onVoteComplete={handleVoteComplete}
-                        />
-                    )
+
+                        {hasVoted ? (
+                            <div className="bg-[#2A103D] border border-white/5 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
+                                <div className="space-y-2">
+                                    <div className="w-12 h-12 bg-[#2EB67D]/10 rounded-full flex items-center justify-center mx-auto mb-2 border border-[#2EB67D]/20">
+                                        <LucideCheckCircle2 className="w-6 h-6 text-[#2EB67D]" />
+                                    </div>
+                                    <h2 className="text-2xl font-black uppercase tracking-tighter">¡Voto Registrado!</h2>
+                                    <p className="text-white/30 text-[9px] font-black uppercase tracking-widest">Tendencia de la mayoría en tiempo real:</p>
+                                </div>
+                                <div className="h-[180px] w-full pt-4 border-t border-white/5">
+                                    <LiveResults poll={poll} compact={true} />
+                                </div>
+                            </div>
+                        ) : (
+                            <VotingCard
+                                poll={poll}
+                                voterId={voterId}
+                                onVoteComplete={handleVoteComplete}
+                            />
+                        )}
+                    </>
                 ) : (
-                    <div className="text-center py-12 glass-panel">
-                        <h2 className="text-xl text-gray-500 font-medium">No hay votación activa</h2>
-                        <p className="text-gray-400 mt-2">Espera a que el administrador inicie una nueva votación.</p>
+                    <div className="text-center space-y-6">
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto border border-white/5 shadow-inner animate-pulse">
+                            <LucideShieldCheck className="w-8 h-8 text-[#FFC100]/20" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black uppercase tracking-tighter">SALA EN ESPERA</h2>
+                            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest leading-relaxed">Aguarda a que el administrador<br />lance la nueva votación.</p>
+                        </div>
                     </div>
                 )}
             </div>
+
+            <footer className="absolute bottom-8 opacity-10 text-[6px] font-black uppercase tracking-[1em]">
+                SECURE ASAMBLEA DIGITAL
+            </footer>
         </div>
     );
 }

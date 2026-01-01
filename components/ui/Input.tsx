@@ -1,3 +1,5 @@
+"use client";
+
 import { InputHTMLAttributes, forwardRef } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -12,7 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
             <input
                 ref={ref}
                 className={cn(
-                    'w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-white/80',
+                    'w-full bg-white border-2 border-gray-100 focus:border-[#3A1B4E] text-[#3A1B4E] rounded-xl px-4 py-3 outline-none transition-all placeholder:text-gray-400 font-medium',
                     className
                 )}
                 {...props}

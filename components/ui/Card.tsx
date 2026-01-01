@@ -7,18 +7,20 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-    variant?: 'default' | 'glass';
+    variant?: 'default' | 'glass' | 'glass-dark' | 'gradient';
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-    ({ className, variant = 'default', ...props }, ref) => {
+    ({ className, variant = 'glass-dark', ...props }, ref) => {
         return (
             <div
                 ref={ref}
                 className={cn(
-                    'rounded-2xl p-6 transition-all',
-                    variant === 'default' && 'bg-white shadow-lg border border-gray-100',
-                    variant === 'glass' && 'bg-white/70 backdrop-blur-md border border-white/50 shadow-xl',
+                    'rounded-2xl transition-all',
+                    variant === 'default' && 'bg-white shadow-lg border border-gray-100 text-gray-900',
+                    variant === 'glass' && 'glass-panel',
+                    variant === 'glass-dark' && 'glass-card',
+                    variant === 'gradient' && 'bg-gradient-to-br from-[#3A1B4E] to-[#2A103D] border border-white/10 shadow-2xl text-white',
                     className
                 )}
                 {...props}
