@@ -36,9 +36,10 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     }, [hash, index]);
 
     const fontSize = useMemo(() => {
-        const baseSize = compact ? 9 : 14;
-        const growthFactor = compact ? 2 : 7;
-        const max = compact ? 28 : 70;
+        // Fuente adaptativa para no saturar pantallas pequeñas
+        const baseSize = compact ? 8 : 12;
+        const growthFactor = compact ? 2 : 5;
+        const max = compact ? 24 : 60;
         return Math.min(baseSize + (wv.count * growthFactor), max);
     }, [wv.count, compact]);
 
@@ -79,18 +80,14 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             return sortedWords.map((wv, i) => {
                 if (i === 0) return { wv, style: { left: '50%', top: '48%', transform: 'translate(-50%, -50%)' } };
 
-                // Incremento de radio mucho más controlado (en %)
-                // i=0 es el centro. i=1, 2, ...
-                const spread = compact ? 4 : 7;
-                const radius = Math.pow(i, 0.65) * spread;
-
-                // Limitar radio para que no salga de la pantalla (área segura central de 80% total)
-                const safeRadius = Math.min(radius, 35);
+                // Radio de seguridad estricto para evitar colisiones con bordes
+                const spread = compact ? 4 : 8;
+                const radius = Math.pow(i, 0.6) * spread;
+                const safeRadius = Math.min(radius, 38);
 
                 const angle = i * goldenAngle;
-
                 const x = centerX + safeRadius * Math.cos(angle);
-                const y = centerY + (safeRadius * 0.75) * Math.sin(angle);
+                const y = centerY + (safeRadius * 0.7) * Math.sin(angle);
 
                 return {
                     wv,
@@ -148,15 +145,15 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
     }).sort((a, b) => b.value - a.value);
 
     return (
-        <div className="w-full h-full flex flex-col items-center justify-center relative min-h-[250px]">
+        <div className="w-full h-full flex flex-col items-center justify-center relative min-h-[250px] p-4">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Pie
                         data={data}
                         cx="50%"
                         cy="50%"
-                        innerRadius={compact ? 40 : 80}
-                        outerRadius={compact ? 60 : 130}
+                        innerRadius={compact ? "40%" : 80}
+                        outerRadius={compact ? "70%" : 130}
                         paddingAngle={5}
                         dataKey="value"
                         animationBegin={0}
@@ -170,33 +167,29 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                         contentStyle={{ backgroundColor: '#1A0826', border: 'none', borderRadius: '12px', color: '#fff' }}
                         itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
                     />}
-                    {!compact && <Legend
-                        layout="horizontal"
-                        verticalAlign="bottom"
-                        align="center"
-                        formatter={(value, entry: any) => (
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60 ml-2">
-                                {value} ({entry.payload.value})
-                            </span>
-                        )}
-                    />}
                 </PieChart>
             </ResponsiveContainer>
 
             {data.length > 0 && data[0].value > 0 && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
                     <span className="block text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Tendencia</span>
-                    <span className={compact ? "text-xl font-black text-white tabular-nums drop-shadow-lg" : "text-3xl font-black text-white tabular-nums drop-shadow-lg"}>
+                    <span className={compact ? "text-xl font-black text-white tabular-nums" : "text-3xl font-black text-white tabular-nums"}>
                         {Math.round((data[0].value / poll.totalVotes) * 100)}%
                     </span>
-                    <span className="block text-[9px] font-bold text-white/40 uppercase mt-1">{data[0].name}</span>
+                    <span className="block text-[9px] font-bold text-white/40 uppercase mt-1 truncate px-10">{data[0].name}</span>
                 </div>
             )}
 
-            {(data.length === 0 || data[0].value === 0) && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none translate-y-[-10px]">
-                    <span className="text-[8px] font-bold text-white/30 uppercase tracking-[0.5em]">Esperando...</span>
-                    <span className={compact ? "text-xl font-black" : "text-3xl font-black"}>0</span>
+            {!compact && data.length > 0 && (
+                <div className="w-full mt-4 flex flex-wrap justify-center gap-4 animate-fade">
+                    {data.map((entry) => (
+                        <div key={entry.name} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                            <span className="text-[10px] font-black uppercase text-white/60 tracking-tighter">
+                                {entry.name}: {entry.value}
+                            </span>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>
