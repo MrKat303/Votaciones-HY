@@ -10,8 +10,8 @@ export default function Home() {
       <main className="flex-1 w-full max-w-4xl mx-auto flex flex-col items-center justify-around p-4 sm:p-6 md:p-10 animate-fade">
 
         {/* Logo Section - Altamente flexible */}
-        <div className="flex flex-col items-center shrink min-h-0">
-          <div className="relative h-[15vh] max-h-[160px] aspect-square transition-all duration-500 hover:scale-105">
+        <div className="flex flex-col items-center shrink min-h-0 mt-4">
+          <div className="relative h-[22vh] max-h-[220px] aspect-square transition-all duration-500 hover:scale-105">
             <Image
               src="/Logo.svg"
               alt="Logo"
