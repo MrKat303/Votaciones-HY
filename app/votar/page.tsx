@@ -42,7 +42,7 @@ export default function VoterPage() {
 
                 const alreadyVoted: string[] = [];
                 validActive.forEach(p => {
-                    if (localStorage.getItem(`has_voted_${p.id}`)) {
+                    if (p.type !== 'WORDCLOUD' && localStorage.getItem(`has_voted_${p.id}`)) {
                         alreadyVoted.push(p.id);
                     }
                 });
@@ -60,8 +60,10 @@ export default function VoterPage() {
     const fullscreenPoll = activePolls.find(p => p.id === fullscreenPollId);
 
     const handleVoteComplete = (pollId: string, pollType: string) => {
-        setVotedIds(prev => [...prev, pollId]);
-        localStorage.setItem(`has_voted_${pollId}`, "true");
+        if (pollType !== 'WORDCLOUD') {
+            setVotedIds(prev => [...prev, pollId]);
+            localStorage.setItem(`has_voted_${pollId}`, "true");
+        }
     };
 
     if (loading) return (
@@ -101,7 +103,7 @@ export default function VoterPage() {
                             </div>
 
                             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-20">
-                                <span className="text-[12px] font-black uppercase tracking-[1em] text-[#3A1B4E]">SISTEMA DE ELECCIONES</span>
+                                <span className="text-[12px] font-black uppercase tracking-[1em] text-[#3A1B4E]">version V2.9</span>
                             </div>
                         </div>
                     ) : (
@@ -205,7 +207,7 @@ export default function VoterPage() {
                                     </div>
 
                                     <footer className="pt-6 border-t border-white/5 flex flex-col items-center gap-2 opacity-30">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.6em]">SISTEMA DE ELECCIONES</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.6em]">version V2.9</p>
                                     </footer>
                                 </aside>
                             </div>
@@ -271,11 +273,21 @@ export default function VoterPage() {
                                         </div>
                                     </div>
                                 ) : (
-                                    <VotingCard
-                                        poll={poll}
-                                        voterId={voterId}
-                                        onVoteComplete={() => handleVoteComplete(poll.id, poll.type)}
-                                    />
+                                    <div className="space-y-4">
+                                        <VotingCard
+                                            poll={poll}
+                                            voterId={voterId}
+                                            onVoteComplete={() => handleVoteComplete(poll.id, poll.type)}
+                                        />
+                                        {poll.type === 'WORDCLOUD' && (
+                                            <button
+                                                onClick={() => setFullscreenPollId(poll.id)}
+                                                className="w-full py-4 bg-[#FFC100]/10 text-[#FFC100] border border-[#FFC100]/20 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-[#FFC100] hover:text-[#3A1B4E] transition-all shadow-lg"
+                                            >
+                                                <LucideMonitorPlay className="w-4 h-4" /> Ver Transmisión en Vivo (Ideas)
+                                            </button>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         ))
@@ -293,7 +305,7 @@ export default function VoterPage() {
             </div>
 
             <footer className="w-full py-12 flex flex-col items-center justify-center border-t border-white/5 mt-10">
-                <p className="text-[8px] font-black uppercase tracking-[1em] opacity-20">SISTEMA DE ELECCIONES</p>
+                <p className="text-[8px] font-black uppercase tracking-[1em] opacity-20">version V2.9</p>
             </footer>
         </div>
     );

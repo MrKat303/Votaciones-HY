@@ -34,6 +34,9 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
             });
 
             if (res.success) {
+                if (poll.type === 'WORDCLOUD') {
+                    setWordInput("");
+                }
                 onVoteComplete();
             } else {
                 setError(res.message);
@@ -62,14 +65,14 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2EB67D]">Tu Respuesta</label>
                             <input
                                 type="text"
-                                maxLength={20}
+                                maxLength={50}
                                 value={wordInput}
                                 onChange={(e) => setWordInput(e.target.value)}
-                                placeholder="Escribe una palabra..."
+                                placeholder="Escribe tus conceptos..."
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black outline-none focus:border-[#2EB67D] transition-all"
                             />
                         </div>
-                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest text-center">Máximo 20 caracteres por envío</p>
+                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest text-center">Máximo 50 caracteres por envío</p>
                     </div>
                 ) : (
                     <div className="space-y-3">

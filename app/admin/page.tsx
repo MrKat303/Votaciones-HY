@@ -75,6 +75,7 @@ export default function AdminPage() {
     };
 
     const currentPoll = polls.find(p => p.id === selectedPollId);
+    const activePolls = polls.filter(p => p.status === "ACTIVE");
     const draftPolls = polls.filter(p => p.status === "DRAFT");
     const closedPolls = polls.filter(p => p.status === "CLOSED");
 
@@ -115,7 +116,7 @@ export default function AdminPage() {
                             </div>
 
                             <div className="absolute bottom-12 left-1/2 -translate-x-1/2 opacity-20">
-                                <span className="text-[12px] font-black uppercase tracking-[1em] text-[#3A1B4E]">SISTEMA DE ELECCIONES</span>
+                                <span className="text-[12px] font-black uppercase tracking-[1em] text-[#3A1B4E]">version V2.9</span>
                             </div>
 
                             <div className="absolute bottom-12 left-12 bg-[#3A1B4E]/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-[#3A1B4E]/10">
@@ -224,7 +225,7 @@ export default function AdminPage() {
                                     </div>
 
                                     <footer className="pt-6 border-t border-white/5 flex flex-col items-center gap-2 opacity-30">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.6em]">SISTEMA DE ELECCIONES</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.6em]">version V2.9</p>
                                     </footer>
                                 </aside>
                             </div>
@@ -351,6 +352,24 @@ export default function AdminPage() {
                 </aside>
 
                 <section className="flex-1 min-w-0 h-full flex flex-col gap-4 relative">
+                    {/* TABS PARA MÚLTIPLES TRANSMISIONES ACTIVAS */}
+                    {activePolls.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto pb-2 shrink-0 scrollbar-hide">
+                            {activePolls.map(p => (
+                                <button
+                                    key={p.id}
+                                    onClick={() => setSelectedPollId(p.id)}
+                                    className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase whitespace-nowrap transition-all border flex items-center gap-2 ${selectedPollId === p.id
+                                        ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100] shadow-lg scale-105'
+                                        : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white'}`}
+                                >
+                                    <div className={`w-1.5 h-1.5 rounded-full ${selectedPollId === p.id ? 'bg-[#3A1B4E] animate-pulse' : 'bg-[#2EB67D]'}`} />
+                                    {p.title}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {currentPoll ? (
                         <>
                             <div className="flex items-center justify-between shrink-0">

@@ -116,7 +116,7 @@ export function CreateVotingForm() {
                     <div className="space-y-2">
                         <label className="text-[9px] font-black text-[#FFC100] uppercase tracking-widest opacity-50">Tema de la Consulta</label>
                         <input
-                            placeholder="Ej: ¿Aprueba el presupuesto 2024?"
+                            placeholder="Ej: ¿Aprueba los estatutos?"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
@@ -215,7 +215,7 @@ export function CreateVotingForm() {
                     </button>
                 </div>
             </form>
-            <div className="text-center pb-8 opacity-10 text-[7px] font-black uppercase tracking-[1em]">HIVEYOUNG ASAMBLEA DIGITAL</div>
+            <div className="text-center pb-8 opacity-10 text-[7px] font-black uppercase tracking-[1em]">version V2.9</div>
         </div>
     );
 }

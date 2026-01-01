@@ -37,9 +37,9 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     }, [hash, index]);
 
     const fontSize = useMemo(() => {
-        const baseSize = compact ? 10 : 16;
-        const growthFactor = compact ? 5 : 18;
-        const max = compact ? 40 : 110;
+        const baseSize = compact ? 10 : 18;
+        const growthFactor = compact ? 4 : 12; // Reducido para evitar que crezcan demasiado rápido
+        const max = compact ? 35 : 85; // Máximo reducido para dar espacio a frases
         return Math.min(baseSize + (wv.count * growthFactor), max);
     }, [wv.count, compact]);
 
@@ -56,7 +56,7 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
                 fontSize: `${fontSize}px`,
                 color: COLORS[hash % COLORS.length],
                 animationDelay: `${index * 80}ms`,
-                filter: `drop-shadow(0 4px 10px rgba(0,0,0,${0.05 + (wv.count * 0.02)}))`,
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 whiteSpace: 'nowrap',
                 transform: `${style.transform} ${rotation === 'rotate-90' ? 'rotate(90deg)' : rotation === '-rotate-90' ? 'rotate(-90deg)' : ''}`
             }}
@@ -72,22 +72,26 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
             [poll.wordVotes]);
 
-        // Algoritmo de Espiral de Arquímedes con Jitter (Ruido) para posicionamiento natural
+        // Algoritmo de Distribución Circular con Proporción Áurea para evitar colisiones excesivas
         const positionedWords = useMemo(() => {
             const centerX = 50;
             const centerY = 50;
+            const goldenAngle = 137.5 * (Math.PI / 180);
 
             return sortedWords.map((wv, i) => {
-                if (i === 0) return { wv, style: { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' } };
+                if (i === 0) return { wv, style: { left: '50%', top: '48%', transform: 'translate(-50%, -50%)' } };
 
-                // Deterministic Jitter based on word text
-                const jitterX = (wv.text.length % 5) - 2;
-                const jitterY = (wv.text.charCodeAt(0) % 5) - 2;
+                // Incremento de radio basado en la raíz cuadrada para una densidad de área uniforme
+                // Spread aumentado significativamente para evitar colisiones
+                const spread = compact ? 15 : 30;
+                const radius = Math.sqrt(i + 1) * spread; // +1 para separar más de la palabra central
+                const angle = i * goldenAngle;
 
-                const angle = 0.6 * i;
-                const spread = compact ? 4 : 7;
-                const x = centerX + (spread * angle * Math.cos(angle)) + jitterX;
-                const y = centerY + (0.6 * spread * angle * Math.sin(angle)) + jitterY;
+                // Jitter proporcional al tamaño para dar más naturalidad y espacio
+                const jitter = (wv.text.charCodeAt(0) % 8) - 4;
+
+                const x = centerX + radius * Math.cos(angle) + jitter;
+                const y = centerY + (radius * 0.85) * Math.sin(angle) + jitter; // Elíptico para pantallas anchas
 
                 return {
                     wv,
