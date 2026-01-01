@@ -1,68 +1,71 @@
-# Sistema de Votaciones HY
+# SISTEMA DE ELECCIONES V2.9
 
-Plataforma de votación digital institucional moderna, diseñada para asambleas con resultados en tiempo real.
+Plataforma institucional de escrutinio digital diseñada para la gestión de asambleas, votaciones y toma de decisiones en tiempo real. Este sistema permite una transición fluida entre la votación de los participantes y la visualización de resultados mediante interfaces de transmisión profesional.
 
-## 🚀 Características
+## 🛠️ Stack Tecnológico
 
-- **Admin Dashboard**: Gestión completa de votaciones (crear, cerrar, monitorear).
-- **Votación Segura**: Bloqueo de doble voto por dispositivo (Fingerprint + LocalStorage).
-- **Tiempo Real**: Actualización instantánea de resultados y estado.
-- **UI Moderna**: Diseño "Glassmorphism" con paleta de colores institucional.
-- **Tech Stack**: Next.js 14+ (App Router), TypeScript, Tailwind CSS, Framer Motion, Recharts.
+- **Framework:** Next.js (App Router)
+- **Lenguaje:** TypeScript
+- **Base de Datos & Realtime:** Supabase
+- **Estilos:** Tailwind CSS
+- **Iconografía:** Lucide React
+- **Componentes Visuales:** Recharts, QRCodeSVG
 
-## 🛠️ Instalación Local
+## 🌟 Funcionalidades Clave
 
-1.  Clonar el repositorio:
-    ```bash
-    git clone https://github.com/MrKat303/Votaciones-HY.git
-    cd Votaciones-HY
-    ```
+### 👨‍💼 Panel de Administración (Monitor de Control)
+- **Gestión de Sesiones:** Creación, lanzamiento y cierre de votaciones con tiempos personalizados.
+- **Modos de Votación:**
+    - **Booleana:** A favor, En contra, Abstención (con vista de Quórum 2/3).
+    - **Múltiple:** Selección de opciones personalizadas.
+    - **Nube de Ideas:** Recolección dinámica de conceptos (WordCloud).
+- **Control de Visibilidad:** Toggle dinámico para publicar o privatizar resultados en la sala pública en tiempo real.
+- **Modo Transmisión:** Interfaz de pantalla completa optimizada para proyectores o streaming:
+    - **Hemiciclo Legislativo:** Visualización de asientos para votos booleanos.
+    - **Modo Presentación:** Fondo pastel minimalista para Nube de Ideas.
+    - **Dashboard V2.9:** Vista técnica con métricas y temporizadores.
 
-2.  Instalar dependencias:
-    ```bash
-    npm install
-    # o
-    pnpm install
-    ```
+### 🗳️ Interfaz del Votante (Sala Pública)
+- **Experiencia Mobile-First:** Diseñada para una interacción rápida desde dispositivos móviles.
+- **Seguridad:** Control de doble voto mediante identificador único por dispositivo.
+- **Privacidad:** Los resultados solo son visibles si el administrador decide publicarlos.
+- **Auto-Limpieza:** Las encuestas desaparecen automáticamente del feed al finalizar el tiempo o tras emitir el voto (según configuración).
 
-3.  Correr el servidor de desarrollo:
-    ```bash
-    npm run dev
-    ```
+## 🚀 Configuración e Instalación
 
-4.  Abrir [http://localhost:3000](http://localhost:3000) en el navegador.
+1. **Clonar repositorio:**
+   ```bash
+   git clone https://github.com/MrKat303/Votaciones-HY.git
+   ```
 
-## 🏗️ Estructura del Proyecto
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-```
-/app
-  /admin        # Rutas de administrador (Dashboard, Crear)
-  /votar        # Interfaz de votación
-  layout.tsx    # Layout global y fuentes
-  page.tsx      # Landing page
-/components
-  /admin        # Componentes de admin (Formularios)
-  /ui           # Componentes base (Button, Card, Input)
-  /voting       # Componentes de votación (Card, Timer, Charts)
-/lib
-  api.ts        # Mock Backend logic
-  utils.ts      # Utilidades de estilo
-/types          # Definiciones TypeScript
-```
+3. **Variables de Entorno:**
+   Crear un archivo `.env.local` con las credenciales de Supabase:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_shave_anonima
+   ```
 
-## 📦 Deploy en Vercel
+4. **Base de Datos:**
+   Ejecutar el script contenido en `supabase_schema.sql` en el editor SQL de tu proyecto Supabase para inicializar las tablas y el Realtime.
 
-1.  Subir el proyecto a tu GitHub.
-2.  Importar el proyecto en [Vercel](https://vercel.com/new).
-3.  Deployar (No requiere configuración extra).
+5. **Desarrollo:**
+   ```bash
+   npm run dev
+   ```
 
-## 🎨 Paleta de Colores
+## 📐 Estructura de Archivos
 
-| Uso | Color | Hex |
-| --- | --- | --- |
-| Primario | Morado Oscuro | `#3A1B4E` |
-| Fondo | Crema | `#F4EDE4` |
-| Éxito | Verde | `#2EB67D` |
-| Info | Azul Cielo | `#529CE8` |
-| Error | Rosa Fuerte | `#C22359` |
-| Acento | Amarillo | `#FFC100` |
+- `/app`: Rutas principales (Landing, Admin, Sala de Votación).
+- `/components`: Lógica de visualización (LiveResults, Hemiciclo, Temporizadores).
+- `/lib`: Configuración de API y cliente de Supabase.
+- `/types`: Definiciones de modelos de datos.
+- `supabase_schema.sql`: Definición de la estructura de la base de datos.
+- `Logo.svg`: Activo institucional de la marca.
+
+---
+**Desarrollado para SISTEMA DE ELECCIONES 2026**
