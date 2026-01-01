@@ -27,11 +27,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
 .full-screen-container {
   height: 100vh;
   width: 100vw;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -64,4 +80,50 @@ body {
 
 .animate-fade {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+@keyframes pulse-word {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pulse-word {
+  animation: pulse-word 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes organic-float {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(2px, -3px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+.organic-float {
+  animation: organic-float 6s ease-in-out infinite;
+}
+
+.word-glow {
+  transition: filter 0.3s ease;
+}
+
+.word-glow:hover {
+  filter: drop-shadow(0 0 12px currentColor) brightness(1.1);
+  z-index: 50;
 }

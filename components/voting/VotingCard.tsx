@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { VoteButton } from "./VoteButton";
 import { Poll } from "@/types";
 import { api } from "@/lib/api";
-import { LucideCheckCircle2, LucideAlertCircle, LucideShield } from "lucide-react";
+import { LucideCheckCircle2, LucideAlertCircle, LucideShield, LucideSend } from "lucide-react";
 
 interface VotingCardProps {
     poll: Poll;
@@ -15,18 +14,22 @@ interface VotingCardProps {
 
 export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
     const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    const [wordInput, setWordInput] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleVote = async () => {
-        if (!selectedOption) return;
+        if (poll.type === 'WORDCLOUD' && !wordInput.trim()) return;
+        if (poll.type !== 'WORDCLOUD' && !selectedOption) return;
+
         setIsSubmitting(true);
         setError(null);
 
         try {
             const res = await api.vote({
                 pollId: poll.id,
-                optionId: selectedOption,
+                optionId: selectedOption || undefined,
+                word: poll.type === 'WORDCLOUD' ? wordInput : undefined,
                 voterId,
             });
 
@@ -43,7 +46,7 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
     };
 
     return (
-        <div className="premium-card max-w-lg mx-auto !p-6 md:!p-8 relative overflow-hidden">
+        <div className="premium-card max-w-lg mx-auto !p-6 md:!p-8 relative overflow-hidden backdrop-blur-xl bg-[#2A103D]/80 border border-white/10 shadow-2xl rounded-[2.5rem]">
             <div className="relative z-10 space-y-6">
 
                 {error && (
@@ -53,34 +56,54 @@ export function VotingCard({ poll, voterId, onVoteComplete }: VotingCardProps) {
                     </div>
                 )}
 
-                <div className="space-y-3">
-                    {poll.options.map((option) => (
-                        <VoteButton
-                            key={option.id}
-                            optionId={option.id}
-                            label={option.text}
-                            isSelected={selectedOption === option.id}
-                            onClick={() => setSelectedOption(option.id)}
-                            disabled={isSubmitting}
-                        />
-                    ))}
-                </div>
+                {poll.type === "WORDCLOUD" ? (
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FFC100]/60">Tu Respuesta</label>
+                            <input
+                                type="text"
+                                maxLength={20}
+                                value={wordInput}
+                                onChange={(e) => setWordInput(e.target.value)}
+                                placeholder="Escribe una palabra..."
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-xl font-black outline-none focus:border-[#FFC100] transition-all"
+                            />
+                        </div>
+                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest text-center">Máximo 20 caracteres por envío</p>
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {poll.options.map((option) => (
+                            <VoteButton
+                                key={option.id}
+                                optionId={option.id}
+                                label={option.text}
+                                isSelected={selectedOption === option.id}
+                                onClick={() => setSelectedOption(option.id)}
+                                disabled={isSubmitting}
+                            />
+                        ))}
+                    </div>
+                )}
 
                 <button
-                    className="w-full btn-brand py-4 text-lg"
-                    disabled={!selectedOption || isSubmitting}
+                    className="w-full h-16 bg-[#FFC100] text-[#3A1B4E] rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg disabled:opacity-50 disabled:grayscale"
+                    disabled={(poll.type === 'WORDCLOUD' ? !wordInput.trim() : !selectedOption) || isSubmitting}
                     onClick={handleVote}
                 >
                     {isSubmitting ? (
-                        <div className="w-5 h-5 border-2 border-[#3A1B4E] border-t-transparent rounded-full animate-spin" />
+                        <div className="w-6 h-6 border-4 border-[#3A1B4E]/20 border-t-[#3A1B4E] rounded-full animate-spin" />
                     ) : (
-                        <>Emitir Voto <LucideCheckCircle2 className="w-5 h-5" /></>
+                        <>
+                            {poll.type === 'WORDCLOUD' ? "ENVIAR IDEA" : "CONFIRMAR VOTO"}
+                            {poll.type === 'WORDCLOUD' ? <LucideSend className="w-5 h-5" /> : <LucideCheckCircle2 className="w-5 h-5" />}
+                        </>
                     )}
                 </button>
 
-                <div className="flex items-center justify-center gap-2 pt-4 opacity-30">
+                <div className="flex items-center justify-center gap-2 pt-2 opacity-20">
                     <LucideShield className="w-3 h-3" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Voto Encriptado</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em]">Sesión Segura HiveYoung</span>
                 </div>
             </div>
         </div>

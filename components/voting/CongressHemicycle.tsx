@@ -9,18 +9,17 @@ interface CongressHemicycleProps {
 
 export function CongressHemicycle({ poll }: CongressHemicycleProps) {
     const { seats, assignedColors } = useMemo(() => {
-        const totalSeats = poll.maxVoters || 100; // Fallback
+        const totalSeats = poll.maxVoters || 100;
         const centerX = 250;
-        const centerY = 280; // Lower center for hemicycle
+        const centerY = 280;
 
-        // Calculate rows based on density roughly
         const rows = Math.max(5, Math.ceil(totalSeats / 20));
         const generatedSeats = [];
 
         let seatCount = 0;
         for (let row = 0; row < rows; row++) {
             const radius = 60 + (row * 22);
-            const circumference = Math.PI * radius; // Half circle length
+            const circumference = Math.PI * radius;
             const seatWidth = 14;
             const seatsInRow = Math.min(
                 Math.floor(circumference / seatWidth * 0.8),
@@ -42,19 +41,24 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
             if (seatCount >= totalSeats) break;
         }
 
-        // Color Logic
-        const assignedColors = new Array(generatedSeats.length).fill("#E5E7EB");
+        const assignedColors = new Array(generatedSeats.length).fill("rgba(255,255,255,0.15)");
         let currentIndex = 0;
-        const colors = [
-            "#2EB67D", // Option 1
-            "#C22359", // Option 2
-            "#529CE8", // Option 3
-            "#FFC100", // Option 4
-            "#9333EA", // Option 5
-        ];
+
+        const getBooleanColor = (text: string) => {
+            const lower = text.toLowerCase();
+            if (lower.includes("favor")) return "#2EB67D";
+            if (lower.includes("contra")) return "#9333EA";
+            if (lower.includes("abst")) return "#FFC100";
+            return "#529CE8";
+        };
+
+        const defaultColors = ["#2EB67D", "#C22359", "#529CE8", "#FFC100", "#9333EA"];
 
         poll.options.forEach((option, idx) => {
-            const color = colors[idx % colors.length];
+            const color = poll.type === "BOOLEAN"
+                ? getBooleanColor(option.text)
+                : defaultColors[idx % defaultColors.length];
+
             for (let i = 0; i < option.votes; i++) {
                 if (currentIndex < generatedSeats.length) {
                     assignedColors[currentIndex] = color;
@@ -71,7 +75,7 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
             <div className="relative w-full max-w-[500px] aspect-[5/3]">
                 <svg viewBox="0 0 500 300" className="w-full h-full drop-shadow-xl bg-white/5 rounded-2xl border border-white/10">
                     {/* Podium */}
-                    <path d="M 220 280 L 280 280 L 270 260 L 230 260 Z" fill="#3A1B4E" opacity="0.8" />
+                    <path d="M 220 280 L 280 280 L 270 260 L 230 260 Z" fill="#FFC100" opacity="0.4" />
 
                     {seats.map((seat, index) => (
                         <circle
@@ -80,14 +84,14 @@ export function CongressHemicycle({ poll }: CongressHemicycleProps) {
                             cy={seat.y}
                             r="5"
                             fill={assignedColors[index]}
-                            className="transition-all duration-500 ease-in-out"
-                            stroke={assignedColors[index] === "#E5E7EB" ? "rgba(0,0,0,0.1)" : "none"}
+                            className="transition-all duration-700 ease-out"
+                            stroke={assignedColors[index] === "rgba(255,255,255,0.15)" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.2)"}
                             strokeWidth="1"
                         />
                     ))}
 
-                    <text x="50%" y="295" textAnchor="middle" fill="#9CA3AF" fontSize="12">
-                        Escaños ocupados: {poll.totalVotes} / {poll.maxVoters}
+                    <text x="50%" y="295" textAnchor="middle" fill="white" opacity="0.2" fontSize="9" fontWeight="900" className="uppercase tracking-[0.2em]">
+                        {poll.totalVotes} / {poll.maxVoters} OCUPADOS
                     </text>
                 </svg>
             </div>
