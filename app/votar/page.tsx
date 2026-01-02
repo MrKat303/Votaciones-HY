@@ -53,7 +53,7 @@ export default function VoterPage() {
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 4000);
+        const interval = setInterval(fetchData, 8000); // Reducido de 4s a 8s para mejor rendimiento
         return () => clearInterval(interval);
     }, []);
 
