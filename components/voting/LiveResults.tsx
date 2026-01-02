@@ -46,7 +46,7 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     return (
         <span
             className={`
-                absolute font-medium transition-all duration-1000 ease-in-out animate-fade organic-float
+                absolute font-bold transition-all duration-1000 ease-in-out animate-fade organic-float
                 ${rotation}
                 ${isPulsing ? 'animate-pulse-word' : ''}
                 select-none
