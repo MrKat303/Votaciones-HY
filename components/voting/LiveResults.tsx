@@ -23,7 +23,7 @@ interface LiveResultsProps {
     compact?: boolean;
 }
 
-const WordCloudItem = ({ wv, index, style, color, compact }: { wv: WordVote, index: number, style: React.CSSProperties, color: string, compact: boolean }) => {
+const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: WordVote, index: number, style: React.CSSProperties, color: string, rotation: string, compact: boolean }) => {
     const [prevCount, setPrevCount] = useState(wv.count);
     const [isPulsing, setIsPulsing] = useState(false);
 
@@ -35,14 +35,6 @@ const WordCloudItem = ({ wv, index, style, color, compact }: { wv: WordVote, ind
             return () => clearTimeout(timer);
         }
     }, [wv.count, prevCount]);
-
-    const hash = useMemo(() => wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0), [wv.text]);
-
-    const rotation = useMemo(() => {
-        if (index === 0) return 'rotate-0';
-        const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
-        return rotOptions[hash % rotOptions.length];
-    }, [hash, index]);
 
     const fontSize = useMemo(() => {
         const baseSize = compact ? 10 : 16;
@@ -89,27 +81,43 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 const maxFontSize = compact ? 32 : 72;
                 const actualFontSize = Math.min(fontSize, maxFontSize);
 
+                // Determine rotation early to adjust bounding box
+                const hash = wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
+                const rotation = i === 0 ? 'rotate-0' : rotOptions[hash % rotOptions.length];
+                const isVertical = rotation === 'rotate-90' || rotation === '-rotate-90';
+
                 // Estimate width and height (rough bounding box)
-                const w = (wv.text.length * actualFontSize * 0.6) / (compact ? 3 : 5); // % of container width
-                const h = (actualFontSize * 1.2) / (compact ? 3 : 5); // % of container height
+                // We use a divisor to convert to roughly % of container
+                const rawW = (wv.text.length * actualFontSize * 0.5) / (compact ? 3 : 5);
+                const rawH = (actualFontSize * 1.0) / (compact ? 3 : 5);
+
+                // If rotated 90deg, swap dimensions
+                const w = isVertical ? rawH : rawW;
+                const h = isVertical ? rawW : rawH;
+
+                // Add padding to prevent tight packing
+                const padding = compact ? 1.5 : 2.5;
+                const paddedW = w + padding;
+                const paddedH = h + padding;
 
                 let x = centerX;
                 let y = centerY;
 
                 if (i > 0) {
-                    let angle = 0;
+                    let angle = hash % 360; // Randomize start angle per word
                     let radius = 2;
                     let found = false;
                     const step = 0.5;
-                    const angleStep = 0.3;
+                    const angleStep = 0.2;
 
                     // Spiral search for a free spot
                     while (!found && radius < 45) {
                         x = centerX + radius * Math.cos(angle);
                         y = centerY + (radius * 0.6) * Math.sin(angle); // Elliptical spiral
 
-                        // Check collision
-                        const currentRect = { x: x - w / 2, y: y - h / 2, w, h };
+                        // Check collision with padding
+                        const currentRect = { x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH };
                         const hasCollision = placedRects.some(r => {
                             return !(currentRect.x + currentRect.w < r.x ||
                                 currentRect.x > r.x + r.w ||
@@ -126,7 +134,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                     }
                 }
 
-                placedRects.push({ x: x - w / 2, y: y - h / 2, w, h });
+                placedRects.push({ x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH });
 
                 // Balanced color assignment
                 const colorIndex = i % CHART_COLORS.length;
@@ -134,6 +142,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 return {
                     wv,
                     color: CHART_COLORS[colorIndex],
+                    rotation,
                     style: {
                         left: `${x}%`,
                         top: `${y}%`,
@@ -159,6 +168,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                             index={i}
                             style={item.style}
                             color={item.color}
+                            rotation={item.rotation}
                             compact={compact}
                         />
                     ))}
