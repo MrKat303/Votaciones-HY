@@ -20,7 +20,7 @@ export default function AdminPage() {
     const [lastPollSummary, setLastPollSummary] = useState<Poll | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [fullscreenResults, setFullscreenResults] = useState(false);
-    const { admin, loading: authLoading } = useAuth();
+    const { admin, loading: authLoading, logout } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -265,7 +265,9 @@ export default function AdminPage() {
                     <Link href="/votar" target="_blank" className="text-[9px] font-bold text-white/40 hover:text-white uppercase flex items-center gap-2">
                         Sala Pública <LucideExternalLink className="w-3 h-3" />
                     </Link>
-                    <Link href="/" className="text-[10px] font-bold text-[#C22359] hover:text-white uppercase">Salir</Link>
+                    <button onClick={logout} className="text-[10px] font-bold text-[#C22359] hover:text-white uppercase transition-colors">
+                        CERRAR SESIÓN
+                    </button>
                     <span className="text-[10px] text-white/40 font-mono">{admin.rut}</span>
                 </div>
             </nav>
