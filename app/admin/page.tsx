@@ -7,7 +7,7 @@ import { LiveResults } from "@/components/voting/LiveResults";
 import { CongressHemicycle } from "@/components/voting/CongressHemicycle";
 import { CountdownTimer } from "@/components/voting/CountdownTimer";
 import Link from "next/link";
-import { LucideBarChart3, LucideUsers, LucideRefreshCw, LucideLayoutGrid, LucidePieChart, LucideExternalLink, LucidePlay, LucideHistory, LucideArchive, LucideTrash2, LucideAlertCircle, LucideType, LucideX, LucideQrCode, LucideEye, LucideEyeOff } from "lucide-react";
+import { LucideBarChart3, LucideUsers, LucideRefreshCw, LucideLayoutGrid, LucidePieChart, LucideExternalLink, LucidePlay, LucideHistory, LucideArchive, LucideTrash2, LucideAlertCircle, LucideType, LucideX, LucideQrCode, LucideEye, LucideEyeOff, LucidePlusCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -56,6 +56,18 @@ export default function AdminPage() {
         await api.startPoll(id, duration);
         setSelectedPollId(id);
         fetchPolls();
+    };
+
+    const handleExtendPoll = async (id: string, minutes: number = 2) => {
+        setIsProcessing(true);
+        try {
+            await api.extendPoll(id, minutes);
+            setLastPollSummary(null);
+            setSelectedPollId(id);
+        } finally {
+            setIsProcessing(false);
+            fetchPolls();
+        }
     };
 
     const handleClosePoll = async (id: string) => {
@@ -303,7 +315,21 @@ export default function AdminPage() {
                             <div className="bg-[#3A1B4E] rounded-xl p-4 h-[220px]">
                                 <LiveResults poll={lastPollSummary} compact={true} />
                             </div>
-                            <button className="w-full py-3 bg-[#FFC100] text-[#3A1B4E] rounded-xl font-black uppercase tracking-widest text-xs" onClick={() => setLastPollSummary(null)}>CERRAR Y ARCHIVAR</button>
+
+                            <div className="flex gap-3">
+                                <button
+                                    className="flex-1 py-3 bg-[#2EB67D] text-[#3A1B4E] rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-white transition-all"
+                                    onClick={() => handleExtendPoll(lastPollSummary.id, 2)}
+                                >
+                                    <LucideRefreshCw className="w-4 h-4" /> Reanudar +2min
+                                </button>
+                                <button
+                                    className="flex-1 py-3 bg-[#FFC100] text-[#3A1B4E] rounded-xl font-black uppercase tracking-widest text-xs hover:bg-white transition-all"
+                                    onClick={() => setLastPollSummary(null)}
+                                >
+                                    Cerrar y Archivar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -358,10 +384,19 @@ export default function AdminPage() {
                         <div className="flex-1 overflow-y-auto p-3 space-y-1">
                             {closedPolls.map(p => (
                                 <div key={p.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer group" onClick={() => setSelectedPollId(p.id)}>
-                                    <span className={`text-[10px] font-medium truncate max-w-[140px] ${selectedPollId === p.id ? 'text-[#FFC100]' : 'opacity-60'}`}>{p.title}</span>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePoll(p.id); }} className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 rounded transition-all">
-                                        <LucideTrash2 className="w-3 h-3" />
-                                    </button>
+                                    <span className={`text-[10px] font-medium truncate max-w-[120px] ${selectedPollId === p.id ? 'text-[#FFC100]' : 'opacity-60'}`}>{p.title}</span>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleExtendPoll(p.id, 2); }}
+                                            className="p-1 hover:text-[#2EB67D] rounded"
+                                            title="Reanudar +2min"
+                                        >
+                                            <LucideRefreshCw className="w-3 h-3" />
+                                        </button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeletePoll(p.id); }} className="p-1 hover:text-red-500 rounded">
+                                            <LucideTrash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -444,12 +479,27 @@ export default function AdminPage() {
                                             <button onClick={() => setFullscreenResults(true)} className="px-6 py-3 bg-[#FFC100] text-[#3A1B4E] rounded-xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg hover:scale-105 transition-all flex items-center gap-2">
                                                 <LucidePlay className="w-4 h-4 fill-current" /> Modo Transmisión
                                             </button>
+
                                             <div className="bg-white p-2 rounded-xl">
                                                 <QRCodeSVG value={`${typeof window !== 'undefined' ? window.location.origin : ''}/votar`} size={44} fgColor="#3A1B4E" />
                                             </div>
-                                            <button onClick={() => handleClosePoll(currentPoll.id)} className="px-6 py-3 bg-red-600/20 text-red-500 border border-red-500/20 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all">
-                                                Finalizar
-                                            </button>
+
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleClosePoll(currentPoll.id)}
+                                                    className="px-6 py-3 bg-[#C22359]/20 text-[#C22359] border border-[#C22359]/20 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#C22359] hover:text-white transition-all"
+                                                >
+                                                    Finalizar
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleExtendPoll(currentPoll.id, 2)}
+                                                    disabled={isProcessing}
+                                                    className="px-6 py-3 bg-[#2EB67D]/20 text-[#2EB67D] border border-[#2EB67D]/20 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#2EB67D] hover:text-white transition-all flex items-center gap-2"
+                                                >
+                                                    <LucidePlusCircle className="w-4 h-4" /> Extender
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}

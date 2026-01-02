@@ -189,6 +189,32 @@ export const api = {
         if (error) throw error;
     },
 
+    extendPoll: async (id: string, additionalMinutes: number): Promise<void> => {
+        const { data: poll, error: fetchError } = await supabase
+            .from('polls')
+            .select('end_time, status')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !poll) throw new Error("Votación no encontrada");
+
+        const currentEndTime = poll.end_time ? new Date(poll.end_time) : new Date();
+        const now = new Date();
+
+        const baseTime = (poll.status === 'CLOSED' || currentEndTime < now) ? now : currentEndTime;
+        const newEndTime = new Date(baseTime.getTime() + additionalMinutes * 60 * 1000);
+
+        const { error } = await supabase
+            .from('polls')
+            .update({
+                status: 'ACTIVE',
+                end_time: newEndTime.toISOString()
+            })
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
     closePoll: async (id: string): Promise<void> => {
         const { error } = await supabase
             .from('polls')

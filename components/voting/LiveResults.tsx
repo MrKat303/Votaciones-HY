@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Poll, WordVote } from "@/types";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
@@ -65,6 +65,57 @@ const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: Wor
 };
 
 export function LiveResults({ poll, compact = false }: LiveResultsProps) {
+    const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleWheel = (e: React.WheelEvent) => {
+        if (compact) return;
+        e.preventDefault(); // Prevent page scroll
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        setTransform(prev => ({
+            ...prev,
+            scale: Math.max(0.1, Math.min(5, prev.scale * delta))
+        }));
+    };
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (compact) return;
+        setIsDragging(true);
+        setLastMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastMousePos.x;
+        const dy = e.clientY - lastMousePos.y;
+        setTransform(prev => ({
+            ...prev,
+            x: prev.x + dx,
+            y: prev.y + dy
+        }));
+        setLastMousePos({ x: e.clientX, y: e.clientY });
+    }, [isDragging, lastMousePos]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        } else {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, handleMouseMove, handleMouseUp]);
+
     if (poll.type === "WORDCLOUD") {
         const sortedWords = useMemo(() =>
             [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
@@ -75,35 +126,33 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             const centerX = 50;
             const centerY = 50;
 
-            // Dynamic scaling factor: as more words appear, everything shrinks slightly
-            // but we keep it within a readable range.
-            const globalScale = Math.max(0.5, 1 - (sortedWords.length * 0.012));
+            // When pan/zoom is enabled, we can spread words much further (scale factor)
+            const globalScale = compact ? 0.8 : 1.2;
 
             return sortedWords.map((wv, i) => {
-                const baseSize = compact ? 12 : 20;
-                const minFontSize = compact ? 10 : 14;
-                const maxFontSize = compact ? 28 : 64; // Reduced max font size from 80 to 64
+                const baseSize = compact ? 12 : 24;
+                const minFontSize = compact ? 10 : 16;
+                const maxFontSize = compact ? 28 : 120; // Increased max size since user can zoom out
 
-                const calculatedSize = (baseSize + (wv.count - 1) * (compact ? 3 : 8)) * globalScale;
+                const calculatedSize = (baseSize + (wv.count - 1) * (compact ? 3 : 12)) * globalScale;
                 const actualFontSize = Math.max(minFontSize, Math.min(calculatedSize, maxFontSize));
 
-                // Determine rotation
                 const hash = wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                 const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
                 const rotation = i === 0 ? 'rotate-0' : rotOptions[hash % rotOptions.length];
                 const isVertical = rotation === 'rotate-90' || rotation === '-rotate-90';
 
-                // Estimate width and height
-                // Using 0.6 for width factor to be safer
-                const rawW = (wv.text.length * actualFontSize * 0.6) / (compact ? 3.5 : 6.5);
-                const rawH = (actualFontSize * 1.2) / (compact ? 3.5 : 6.5);
+                // Estimate width and height (Generous bounding box)
+                // Width factor 0.8 and height 1.6 for Poppins Bold
+                // Increased divisors to better represent percentage of screen
+                const rawW = (wv.text.length * actualFontSize * 0.85) / (compact ? 4 : 8.5);
+                const rawH = (actualFontSize * 1.8) / (compact ? 4 : 8.5);
 
-                // If rotated 90deg, swap dimensions
                 const w = isVertical ? rawH : rawW;
                 const h = isVertical ? rawW : rawH;
 
-                // Dynamic padding: larger words get more padding
-                const padding = (compact ? 1.0 : 2.0) + (actualFontSize / 20);
+                // Significant padding to ensure breathability
+                const padding = (compact ? 2.0 : 5.0) + (actualFontSize / 10);
                 const paddedW = w + padding;
                 const paddedH = h + padding;
 
@@ -111,19 +160,19 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 let y = centerY;
 
                 if (i > 0) {
-                    let angle = (hash % 360) * (Math.PI / 180);
+                    // Randomize start angle slightly per word to avoid "aligned" gaps
+                    let angle = (hash % 100) * (Math.PI / 50);
                     let radius = 1;
                     let found = false;
-                    const step = 0.4;
-                    const angleStep = 0.15;
+                    const step = 0.4; // Slightly less dense for faster performance and wider spread
+                    const angleStep = 0.12;
 
                     // Spiral search for a free spot
-                    // Radius max reduced to 38 to keep a safety margin from screen edges
-                    while (!found && radius < 38) {
+                    while (!found && radius < (compact ? 45 : 200)) {
+                        // Ellipse ratio 0.55 for cinematic/desktop views
                         x = centerX + radius * Math.cos(angle);
-                        y = centerY + (radius * 0.55) * Math.sin(angle); // Elliptical spiral
+                        y = centerY + (radius * 0.6) * Math.sin(angle);
 
-                        // Check collision with padding
                         const currentRect = { x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH };
                         const hasCollision = placedRects.some(r => {
                             return !(currentRect.x + currentRect.w < r.x ||
@@ -132,10 +181,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                                 currentRect.y > r.y + r.h);
                         });
 
-                        // Edge check to prevent clipping
-                        const isOutOfBounds = (x - w / 2 < 5) || (x + w / 2 > 95) || (y - h / 2 < 8) || (y + h / 2 > 92);
-
-                        if (!hasCollision && !isOutOfBounds) {
+                        if (!hasCollision) {
                             found = true;
                         } else {
                             angle += angleStep;
@@ -145,8 +191,6 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 }
 
                 placedRects.push({ x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH });
-
-                // Balanced color assignment
                 const colorIndex = i % CHART_COLORS.length;
 
                 return {
@@ -165,13 +209,23 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
 
         return (
             <div
-                className="absolute inset-0 overflow-hidden"
+                ref={containerRef}
+                className={`absolute inset-0 overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                 style={{
                     fontFamily: "var(--font-poppins), sans-serif",
                     backgroundColor: "#F4EDE4",
+                    touchAction: 'none'
                 }}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
             >
-                <div className="relative w-full h-full">
+                <div
+                    className="relative w-full h-full transition-transform duration-100 ease-out"
+                    style={{
+                        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+                        transformOrigin: 'center center'
+                    }}
+                >
                     {positionedWords.map((item, i) => (
                         <WordCloudItem
                             key={item.wv.text}
@@ -184,6 +238,14 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                         />
                     ))}
                 </div>
+
+                {!compact && (
+                    <div className="absolute bottom-10 right-10 flex flex-col gap-2 pointer-events-none opacity-30 select-none">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#3A1B4E]">Drag para mover</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#3A1B4E]">Scroll para zoom</p>
+                    </div>
+                )}
+
                 {(!poll.wordVotes || poll.wordVotes.length === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade">
                         <div className="w-12 h-12 rounded-full border-4 border-[#3A1B4E]/5 border-t-[#3A1B4E]/20 animate-spin" />
