@@ -46,7 +46,7 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     return (
         <span
             className={`
-                absolute font-black tracking-tighter transition-all duration-1000 ease-in-out word-glow animate-fade organic-float
+                absolute font-medium transition-all duration-1000 ease-in-out animate-fade organic-float
                 ${rotation}
                 ${isPulsing ? 'animate-pulse-word' : ''}
                 select-none
@@ -56,7 +56,6 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
                 fontSize: `${fontSize}px`,
                 color: COLORS[hash % COLORS.length],
                 animationDelay: `${index * 80}ms`,
-                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 whiteSpace: 'nowrap',
                 transform: `${style.transform} ${rotation === 'rotate-90' ? 'rotate(90deg)' : rotation === '-rotate-90' ? 'rotate(-90deg)' : ''}`
             }}
@@ -81,9 +80,10 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 if (i === 0) return { wv, style: { left: '50%', top: '48%', transform: 'translate(-50%, -50%)' } };
 
                 // Radio de seguridad estricto para evitar colisiones con bordes
-                const spread = compact ? 4 : 8;
-                const radius = Math.pow(i, 0.6) * spread;
-                const safeRadius = Math.min(radius, 38);
+                // Aumentamos el spread para evitar que se toquen (compact: 4->7, normal: 8->13)
+                const spread = compact ? 7 : 13;
+                const radius = Math.pow(i, 0.65) * spread;
+                const safeRadius = Math.min(radius, 42);
 
                 const angle = i * goldenAngle;
                 const x = centerX + safeRadius * Math.cos(angle);
