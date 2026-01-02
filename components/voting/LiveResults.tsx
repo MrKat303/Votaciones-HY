@@ -31,7 +31,7 @@ const WordCloudItem = ({ wv, fontSize, color }: { wv: WordVote, fontSize: number
     );
 };
 
-const WordCloudView = ({ poll, compact, transform, isDragging, handleWheel, handleMouseDown, containerRef }: any) => {
+const WordCloudView = ({ poll, compact, transform, isDragging, handleWheel, handleMouseDown, handleTouchStart, containerRef }: any) => {
     const renderedWords = useMemo(() => {
         const words = [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count);
         if (words.length === 0) return [];
@@ -66,6 +66,7 @@ const WordCloudView = ({ poll, compact, transform, isDragging, handleWheel, hand
             }}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
         >
             <style dangerouslySetInnerHTML={{
                 __html: `
@@ -184,6 +185,12 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
         setLastMousePos({ x: e.clientX, y: e.clientY });
     };
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (compact) return;
+        setIsDragging(true);
+        setLastMousePos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    };
+
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isDragging) return;
         const dx = (e.clientX - lastMousePos.x);
@@ -196,7 +203,23 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
         setLastMousePos({ x: e.clientX, y: e.clientY });
     }, [isDragging, lastMousePos]);
 
+    const handleTouchMove = useCallback((e: TouchEvent) => {
+        if (!isDragging) return;
+        const dx = (e.touches[0].clientX - lastMousePos.x);
+        const dy = (e.touches[0].clientY - lastMousePos.y);
+        setTransform(prev => ({
+            ...prev,
+            x: prev.x + dx,
+            y: prev.y + dy
+        }));
+        setLastMousePos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }, [isDragging, lastMousePos]);
+
     const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    const handleTouchEnd = useCallback(() => {
         setIsDragging(false);
     }, []);
 
@@ -204,15 +227,21 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
         if (isDragging) {
             window.addEventListener('mousemove', handleMouseMove);
             window.addEventListener('mouseup', handleMouseUp);
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+            window.addEventListener('touchend', handleTouchEnd);
         } else {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleTouchEnd);
         }
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
+            window.removeEventListener('touchmove', handleTouchMove);
+            window.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [isDragging, handleMouseMove, handleMouseUp]);
+    }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
     if (poll.type === "WORDCLOUD") {
         return (
@@ -223,6 +252,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 isDragging={isDragging}
                 handleWheel={handleWheel}
                 handleMouseDown={handleMouseDown}
+                handleTouchStart={handleTouchStart}
                 containerRef={containerRef}
             />
         );

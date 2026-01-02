@@ -70,21 +70,21 @@ export function CreateVotingForm() {
     };
 
     return (
-        <div className="fixed inset-0 bg-[#3A1B4E] text-white overflow-y-auto py-12 px-6">
+        <div className="min-h-screen bg-[#3A1B4E] text-white py-8 lg:py-12 px-4 lg:px-6 overflow-y-auto relative">
 
             <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FFC100] to-transparent opacity-20 pointer-events-none" />
 
-            <Link href="/admin" className="absolute top-8 left-8 flex items-center gap-2 text-white/30 hover:text-[#FFC100] transition-colors font-black text-[10px] uppercase tracking-[0.2em] group z-10">
+            <Link href="/admin" className="inline-flex items-center gap-2 text-white/30 hover:text-[#FFC100] transition-colors font-black text-[9px] lg:text-[10px] uppercase tracking-[0.2em] group mb-8">
                 <LucideArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" /> VOLVER AL PANEL
             </Link>
 
-            <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-8 animate-fade pb-12">
-                <div className="text-center space-y-2 pt-8">
+            <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-6 lg:space-y-8 animate-fade pb-12">
+                <div className="text-center space-y-2">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-2">
                         <LucideShieldCheck className="w-3 h-3 text-[#FFC100]" />
                         <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Configuración de Asamblea</span>
                     </div>
-                    <h1 className="text-2xl font-black uppercase tracking-tighter">Nueva Votación</h1>
+                    <h1 className="text-xl lg:text-2xl font-black uppercase tracking-tighter">Nueva Votación</h1>
                 </div>
 
                 <div className="space-y-6">
@@ -126,19 +126,19 @@ export function CreateVotingForm() {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
-                            className="w-full bg-white/5 border-b-2 border-white/10 focus:border-[#FFC100] py-3 px-1 text-xl font-bold outline-none transition-all placeholder:text-white/5"
+                            className="w-full bg-white/5 border-b-2 border-white/10 focus:border-[#FFC100] py-2 lg:py-3 px-1 text-lg lg:text-xl font-bold outline-none transition-all placeholder:text-white/5"
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
-                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Mín. 1 Minuto)</label>
+                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Minutos)</label>
                             <input
                                 type="number"
                                 min="1"
                                 value={duration}
                                 onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                                className="w-full bg-transparent text-2xl font-black text-[#FFC100] outline-none"
+                                className="w-full bg-transparent text-xl lg:text-2xl font-black text-[#FFC100] outline-none"
                             />
                         </div>
                         {type === "BOOLEAN" && (
@@ -149,7 +149,7 @@ export function CreateVotingForm() {
                                     min="1"
                                     value={maxVoters}
                                     onChange={(e) => setMaxVoters(parseInt(e.target.value) || 100)}
-                                    className="w-full bg-transparent text-2xl font-black text-white outline-none"
+                                    className="w-full bg-transparent text-xl lg:text-2xl font-black text-white outline-none"
                                 />
                             </div>
                         )}
@@ -158,7 +158,7 @@ export function CreateVotingForm() {
                     {type !== "WORDCLOUD" && (
                         <div className="space-y-3">
                             <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Opciones / Alternativas</label>
-                            <div className="grid grid-cols-1 gap-2 max-h-[120px] overflow-y-auto pr-2 custom-scroll">
+                            <div className="grid grid-cols-1 gap-2 max-h-[160px] lg:max-h-none overflow-y-auto pr-2 custom-scroll">
                                 {options.map((opt, i) => (
                                     <div key={i} className="flex gap-2 group">
                                         <input
@@ -173,7 +173,7 @@ export function CreateVotingForm() {
                                             className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-[#FFC100] disabled:opacity-50"
                                         />
                                         {type === "MULTIPLE" && options.length > 2 && (
-                                            <button onClick={() => setOptions(options.filter((_, idx) => idx !== i))} className="p-2 text-white/20 hover:text-red-500 transition-colors">
+                                            <button type="button" onClick={() => setOptions(options.filter((_, idx) => idx !== i))} className="p-2 text-white/20 hover:text-red-500 transition-colors">
                                                 <LucideTrash2 className="w-4 h-4" />
                                             </button>
                                         )}
@@ -181,8 +181,9 @@ export function CreateVotingForm() {
                                 ))}
                                 {type === "MULTIPLE" && options.length < 6 && (
                                     <button
+                                        type="button"
                                         onClick={() => setOptions([...options, ""])}
-                                        className="w-full py-2 border border-dashed border-white/10 rounded-xl text-[10px] font-bold text-white/20 hover:text-white hover:border-white/30 transition-all"
+                                        className="w-full py-2 border border-dashed border-white/10 rounded-xl text-[9px] lg:text-[10px] font-bold text-white/20 hover:text-white hover:border-white/30 transition-all uppercase"
                                     >
                                         + AGREGAR ALTERNATIVA
                                     </button>
@@ -198,7 +199,7 @@ export function CreateVotingForm() {
                             className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${hideResults ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40'}`}
                         >
                             <LucideEyeOff className="w-3 h-3" />
-                            <span className="text-[8px] font-black uppercase">Ocultar Resultados</span>
+                            <span className="text-[7px] lg:text-[8px] font-black uppercase">Ocultar Resultados</span>
                         </button>
                         <button
                             type="button"
@@ -206,7 +207,7 @@ export function CreateVotingForm() {
                             className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${allowChange ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40'}`}
                         >
                             <LucideRefreshCcw className="w-3 h-3" />
-                            <span className="text-[8px] font-black uppercase">Permitir Edición</span>
+                            <span className="text-[7px] lg:text-[8px] font-black uppercase">Permitir Edición</span>
                         </button>
                     </div>
                 </div>
@@ -215,7 +216,7 @@ export function CreateVotingForm() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full max-w-sm py-4 bg-[#FFC100] text-[#3A1B4E] rounded-xl text-base font-black transition-all hover:scale-[1.02] shadow-2xl uppercase tracking-widest"
+                        className="w-full py-4 bg-[#FFC100] text-[#3A1B4E] rounded-xl text-sm lg:text-base font-black transition-all hover:scale-[1.02] shadow-2xl uppercase tracking-[0.15em] lg:tracking-widest"
                     >
                         {loading ? "ARCHIVANDO..." : "ARCHIVAR Y CONFIGURAR"}
                     </button>

@@ -52,7 +52,7 @@ export default function Home() {
             </div>
           </Link>
 
-          <Link href="/admin" className="group hidden sm:block h-full">
+          <Link href="/admin" className="group h-full">
             <div className="h-full bg-white/5 p-[2vh] rounded-[2rem] border border-white/5 hover:bg-white/15 hover:border-white/30 transition-all duration-300 flex flex-col items-center justify-center gap-[1.5vh] text-center relative overflow-hidden shadow-2xl backdrop-blur-md">
               <div className="absolute top-0 left-0 w-full h-1 bg-white/20" />
               <div className="w-[6vh] h-[6vh] bg-white/10 rounded-xl flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all">
