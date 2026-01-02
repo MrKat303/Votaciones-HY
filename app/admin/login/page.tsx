@@ -36,14 +36,14 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-[#3A1B4E] flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FFC100] via-[#C22359] to-[#2EB67D]" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-[#2EB67D]" />
 
                 <div className="text-center mb-8 relative z-10">
                     <div className="w-16 h-16 bg-[#F4EDE4] rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
                         <LucideLock className="w-8 h-8 text-[#3A1B4E]" />
                     </div>
                     <h1 className="text-2xl font-black text-white uppercase tracking-wider mb-2">Administración</h1>
-                    <p className="text-white/40 text-sm font-medium">Sistema de Votaciones Hive Young</p>
+                    <p className="text-white/40 text-[10px] font-black tracking-widest uppercase">SISTEMA DE VOTACIONES HIVEYOUNG</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
@@ -85,21 +85,14 @@ export default function LoginPage() {
 
                     <Button
                         type="submit"
-                        className="w-full bg-[#FFC100] text-[#3A1B4E] font-black uppercase tracking-widest py-6 rounded-xl hover:bg-white transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+                        className="w-full bg-[#9063AD] text-white font-black uppercase tracking-widest py-6 rounded-xl hover:bg-white hover:text-[#3A1B4E] transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
                         disabled={isLoading}
                     >
                         {isLoading ? <LucideLoader2 className="w-5 h-5 animate-spin" /> : "Ingresar"}
                     </Button>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <p className="text-[10px] font-mono text-white/20">ACCESS RESTRICTED • AUTHORIZED PERSONNEL ONLY</p>
-                </div>
             </div>
-
-            <footer className="mt-8 opacity-30">
-                <p className="text-[9px] font-black uppercase tracking-[0.6em] text-white">Secure Login V2.0</p>
-            </footer>
         </div>
     );
 }
