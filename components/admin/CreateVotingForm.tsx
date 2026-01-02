@@ -10,7 +10,7 @@ import Link from "next/link";
 export function CreateVotingForm() {
     const [title, setTitle] = useState("");
     const [type, setType] = useState<PollType>("BOOLEAN");
-    const [duration, setDuration] = useState(5);
+    const [duration, setDuration] = useState(1);
     const [maxVoters, setMaxVoters] = useState(100);
     const [options, setOptions] = useState<string[]>(["A favor", "En contra", "Abstención"]);
     const [loading, setLoading] = useState(false);
@@ -126,12 +126,12 @@ export function CreateVotingForm() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
-                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Mín. 5 Minutos)</label>
+                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Mín. 1 Minuto)</label>
                             <input
                                 type="number"
-                                min="5"
+                                min="1"
                                 value={duration}
-                                onChange={(e) => setDuration(parseInt(e.target.value) || 5)}
+                                onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
                                 className="w-full bg-transparent text-2xl font-black text-[#FFC100] outline-none"
                             />
                         </div>
