@@ -14,16 +14,12 @@ interface LiveResultsProps {
     compact?: boolean;
 }
 
-const WordCloudItem = ({ wv, style, color, isBig }: { wv: WordVote, style: React.CSSProperties, color: string, isBig: boolean }) => {
+const WordCloudItem = ({ wv, fontSize, color }: { wv: WordVote, fontSize: number, color: string }) => {
     return (
         <span
-            className={`
-                absolute font-black transition-all duration-1000 ease-out animate-fade 
-                select-none leading-[0.85] tracking-tighter
-                ${isBig ? 'z-20' : 'z-10'}
-            `}
+            className="font-black transition-all duration-500 ease-out animate-fade select-none leading-[0.9] tracking-tighter inline-block"
             style={{
-                ...style,
+                fontSize: `${fontSize}px`,
                 color: color,
                 whiteSpace: 'nowrap',
                 textShadow: 'none',
@@ -36,157 +32,63 @@ const WordCloudItem = ({ wv, style, color, isBig }: { wv: WordVote, style: React
 };
 
 const WordCloudView = ({ poll, compact, transform, isDragging, handleWheel, handleMouseDown, containerRef }: any) => {
-    const sortedWords = useMemo(() =>
-        [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
-        [poll.wordVotes]);
+    const renderedWords = useMemo(() => {
+        const words = [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count);
+        if (words.length === 0) return [];
 
-    const positionedWords = useMemo(() => {
-        if (sortedWords.length === 0) return [];
+        const maxCount = words[0]?.count || 1;
 
-        const placedRects: { x: number, y: number, w: number, h: number }[] = [];
-        const centerX = 50;
-        const centerY = 50;
-
-        // Grid Occupancy Map (discrete 100x100 grid for perfect collision)
-        // We actually use a higher resolution grid for precision 200x200
-        const gridRes = 200;
-        const occupied = Array(gridRes).fill(null).map(() => new Uint8Array(gridRes));
-
-        return sortedWords.map((wv, i) => {
-            const maxCount = sortedWords[0]?.count || 1;
+        return words.map((wv, i) => {
             const freqRatio = wv.count / maxCount;
 
-            // 1. Font Size Calibration (More aggressive center)
-            let baseSize = compact ? 12 : 26;
-            let maxSize = compact ? 30 : 130;
-            let fontSize = baseSize + (maxSize - baseSize) * Math.pow(freqRatio, 0.45);
-
-            // Long words protection
-            if (wv.text.length > 10) fontSize *= 0.9;
-            if (wv.text.length > 20) fontSize *= 0.75;
-
-            // 2. Box size in Grid Units
-            const pFactor = compact ? 0.6 : 0.32;
-            const w = Math.ceil((wv.text.length * fontSize * 0.58) * pFactor);
-            const h = Math.ceil((fontSize * 0.95) * pFactor);
-
-            // Mandatory "Air" padding (TIGHTER: Removed x3 and x2 multipliers)
-            const padding = Math.max(1, Math.floor(h * 0.15));
-            const pw = w + padding;
-            const ph = h + padding;
-
-            // 3. Digital Packing Search (Center-Out Outward Search)
-            let found = false;
-            let finalX = centerX;
-            let finalY = centerY;
-
-            // High Precision Spiral Search
-            let angle = (i * 2.4) % (2 * Math.PI);
-            let radius = 0;
-            const radiusStep = 0.5; // Finer Steps
-            const angleStep = 0.1;  // Higher Precision
-
-            if (i > 0) {
-                let attempts = 0;
-                while (!found && attempts < 5000) {
-                    // Ellipse: 1.6x for a more natural screen fit without over-spreading
-                    const vx = Math.round(gridRes / 2 + radius * Math.cos(angle) * 1.6);
-                    const vy = Math.round(gridRes / 2 + radius * Math.sin(angle));
-
-                    // Check if block is inside grid and free
-                    if (vx - pw / 2 >= 0 && vx + pw / 2 < gridRes && vy - ph / 2 >= 0 && vy + ph / 2 < gridRes) {
-                        let collision = false;
-                        const startX = Math.floor(vx - pw / 2);
-                        const startY = Math.floor(vy - ph / 2);
-
-                        // Grid Collision Check
-                        for (let r = startY; r < startY + ph; r++) {
-                            for (let c = startX; c < startX + pw; c++) {
-                                if (occupied[r][c]) {
-                                    collision = true;
-                                    break;
-                                }
-                            }
-                            if (collision) break;
-                        }
-
-                        if (!collision) {
-                            // Mark grid occupied
-                            for (let r = startY; r < startY + ph; r++) {
-                                for (let c = startX; c < startX + pw; c++) {
-                                    occupied[r][c] = 1;
-                                }
-                            }
-                            finalX = (vx / gridRes) * 100;
-                            finalY = (vy / gridRes) * 100;
-                            found = true;
-                        }
-                    }
-
-                    angle += angleStep;
-                    radius += radiusStep / 20;
-                    attempts++;
-                }
-            } else {
-                // First word: Center it and mark grid
-                const startX = Math.floor((gridRes / 2) - pw / 2);
-                const startY = Math.floor((gridRes / 2) - ph / 2);
-                for (let r = startY; r < startY + ph; r++) {
-                    for (let c = startX; c < startX + pw; c++) {
-                        occupied[r][c] = 1;
-                    }
-                }
-                found = true;
-            }
+            // Hierarchy: Clear size difference
+            let baseSize = compact ? 12 : 24;
+            let maxSize = compact ? 26 : 96;
+            let fontSize = baseSize + (maxSize - baseSize) * Math.pow(freqRatio, 0.5);
 
             return {
                 wv,
-                color: CHART_COLORS[i % CHART_COLORS.length],
-                style: {
-                    left: `${finalX}%`,
-                    top: `${finalY}%`,
-                    fontSize: `${fontSize}px`,
-                    transform: 'translate(-50%, -50%)',
-                }
+                fontSize,
+                color: CHART_COLORS[i % CHART_COLORS.length]
             };
         });
-    }, [sortedWords, compact]);
+    }, [poll.wordVotes, compact]);
 
     return (
         <div
             ref={containerRef}
-            className={`absolute inset-0 overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-[#F4EDE4] flex items-center justify-center`}
+            className={`absolute inset-0 overflow-auto ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-[#F4EDE4] flex items-center justify-center p-8`}
             style={{
                 fontFamily: "var(--font-poppins), sans-serif",
-                touchAction: 'none'
+                touchAction: 'none',
+                scrollbarWidth: 'none', // Hide scrollbars for cleaner look
+                msOverflowStyle: 'none'
             }}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
         >
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                div::-webkit-scrollbar { display: none; }
+            `}} />
+
             <div
-                className="relative w-full h-full transition-transform duration-700 ease-out"
+                className="w-full max-w-6xl mx-auto transition-transform duration-700 ease-out flex flex-wrap justify-center items-center"
                 style={{
                     transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-                    transformOrigin: '50% 50%'
+                    transformOrigin: 'center center',
+                    gap: '24px 16px' // Clean fixed spacing
                 }}
             >
-                {positionedWords.map((item, i) => (
+                {renderedWords.map((item, i) => (
                     <WordCloudItem
                         key={`${item.wv.text}-${i}`}
                         wv={item.wv}
-                        style={item.style}
+                        fontSize={item.fontSize}
                         color={item.color}
-                        isBig={item.wv.count > 1}
                     />
                 ))}
             </div>
-
-            {!compact && (
-                <div className="absolute bottom-6 left-6 pointer-events-none opacity-20 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#1A0826] animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3A1B4E]">Distribución Orgánica Activa</p>
-                </div>
-            )}
         </div>
     );
 };
