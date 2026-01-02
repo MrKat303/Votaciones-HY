@@ -70,97 +70,105 @@ export function CreateVotingForm() {
     };
 
     return (
-        <div className="min-h-screen bg-[#3A1B4E] text-white py-8 lg:py-12 px-4 lg:px-6 overflow-y-auto relative">
+        <div className="h-screen bg-[#3A1B4E] text-white py-4 lg:py-8 px-4 lg:px-6 relative overflow-y-auto custom-scroll">
+            {/* Background elements */}
+            <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#2EB67D] to-transparent opacity-30 pointer-events-none" />
+            <div className="fixed -top-24 -left-24 w-96 h-96 bg-[#2EB67D]/10 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="fixed top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#FFC100] to-transparent opacity-20 pointer-events-none" />
-
-            <Link href="/admin" className="inline-flex items-center gap-2 text-white/30 hover:text-[#FFC100] transition-colors font-black text-[9px] lg:text-[10px] uppercase tracking-[0.2em] group mb-8">
+            <Link href="/admin" className="inline-flex items-center gap-2 text-white/30 hover:text-white transition-all font-black text-[8px] lg:text-[9px] uppercase tracking-[0.2rem] group mb-4 ml-2 lg:ml-8">
                 <LucideArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" /> VOLVER AL PANEL
             </Link>
 
-            <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto space-y-6 lg:space-y-8 animate-fade pb-12">
-                <div className="text-center space-y-2">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-2">
-                        <LucideShieldCheck className="w-3 h-3 text-[#FFC100]" />
-                        <span className="text-[8px] font-black uppercase tracking-widest text-white/60">Configuración de Asamblea</span>
+            <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto space-y-5 lg:space-y-6 animate-fade pb-12 relative z-10">
+                <div className="text-center space-y-1">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 mb-1">
+                        <LucideShieldCheck className="w-3 h-3 text-[#2EB67D]" />
+                        <span className="text-[7px] font-black uppercase tracking-[0.2em] text-white/50">Configuración</span>
                     </div>
-                    <h1 className="text-xl lg:text-2xl font-black uppercase tracking-tighter">Nueva Votación</h1>
+                    <h1 className="text-lg lg:text-2xl font-black uppercase tracking-tighter leading-none">Nueva Votación</h1>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {/* Selector de Tipo */}
                     <div className="space-y-3">
-                        <label className="text-[9px] font-black text-white/30 uppercase tracking-widest">Tipo de Escrutinio</label>
+                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] block ml-1">Tipo de Escrutinio</label>
                         <div className="grid grid-cols-3 gap-2">
                             <button
                                 type="button"
                                 onClick={() => handleTypeChange("BOOLEAN")}
-                                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${type === "BOOLEAN" ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 lg:p-4 rounded-xl border transition-all duration-300 ${type === "BOOLEAN" ? 'bg-[#2EB67D] text-[#1A0826] border-[#2EB67D] shadow-[0_0_20px_rgba(46,182,125,0.3)] scale-105' : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:border-white/20'}`}
                             >
-                                <LucideCheckCircle2 className="w-5 h-5" />
-                                <span className="text-[8px] font-black uppercase">Booleana</span>
+                                <LucideCheckCircle2 className={`w-4 h-4 lg:w-5 lg:h-5 ${type === "BOOLEAN" ? 'animate-bounce' : ''}`} />
+                                <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest">Booleana</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleTypeChange("MULTIPLE")}
-                                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${type === "MULTIPLE" ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 lg:p-4 rounded-xl border transition-all duration-300 ${type === "MULTIPLE" ? 'bg-[#2EB67D] text-[#1A0826] border-[#2EB67D] shadow-[0_0_20px_rgba(46,182,125,0.3)] scale-105' : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:border-white/20'}`}
                             >
-                                <LucidePieChart className="w-5 h-5" />
-                                <span className="text-[8px] font-black uppercase">Múltiple</span>
+                                <LucidePieChart className={`w-4 h-4 lg:w-5 lg:h-5 ${type === "MULTIPLE" ? 'animate-bounce' : ''}`} />
+                                <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest">Múltiple</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleTypeChange("WORDCLOUD")}
-                                className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${type === "WORDCLOUD" ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10'}`}
+                                className={`flex flex-col items-center justify-center gap-2 p-3 lg:p-4 rounded-xl border transition-all duration-300 ${type === "WORDCLOUD" ? 'bg-[#2EB67D] text-[#1A0826] border-[#2EB67D] shadow-[0_0_20px_rgba(46,182,125,0.3)] scale-105' : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:border-white/20'}`}
                             >
-                                <LucideType className="w-5 h-5" />
-                                <span className="text-[8px] font-black uppercase">Mapa Ideas</span>
+                                <LucideType className={`w-4 h-4 lg:w-5 lg:h-5 ${type === "WORDCLOUD" ? 'animate-bounce' : ''}`} />
+                                <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-center">Idea</span>
                             </button>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[9px] font-black text-[#FFC100] uppercase tracking-widest opacity-50">Tema de la Consulta</label>
+                    <div className="space-y-1 group">
+                        <label className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] block ml-1">Asunto de la Consulta</label>
                         <input
-                            placeholder="Ej: ¿Aprueba los estatutos?"
+                            placeholder="Ej: ¿Aprueba la gestión anual?"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             required
-                            className="w-full bg-white/5 border-b-2 border-white/10 focus:border-[#FFC100] py-2 lg:py-3 px-1 text-lg lg:text-xl font-bold outline-none transition-all placeholder:text-white/5"
+                            className="w-full bg-white/5 border-b-2 border-white/10 focus:border-[#2EB67D] py-2 lg:py-3 px-1 text-lg lg:text-xl font-black outline-none transition-all placeholder:text-white/5"
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
-                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest text-[#FFC100]">Duración (Minutos)</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={duration}
-                                onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
-                                className="w-full bg-transparent text-xl lg:text-2xl font-black text-[#FFC100] outline-none"
-                            />
-                        </div>
-                        {type === "BOOLEAN" && (
-                            <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2 animate-fade">
-                                <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Asientos (Quorum)</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5">
+                        <div className="bg-white/5 p-4 lg:p-5 rounded-3xl border border-white/10 space-y-2 hover:border-white/20 transition-colors">
+                            <label className="text-[8px] font-black text-[#2EB67D] uppercase tracking-[0.2em]">Tiempo (Minutos)</label>
+                            <div className="flex items-end gap-2">
                                 <input
                                     type="number"
                                     min="1"
-                                    value={maxVoters}
-                                    onChange={(e) => setMaxVoters(parseInt(e.target.value) || 100)}
-                                    className="w-full bg-transparent text-xl lg:text-2xl font-black text-white outline-none"
+                                    value={duration}
+                                    onChange={(e) => setDuration(parseInt(e.target.value) || 1)}
+                                    className="w-full bg-transparent text-2xl lg:text-3xl font-black text-white outline-none"
                                 />
+                            </div>
+                        </div>
+                        {type === "BOOLEAN" && (
+                            <div className="bg-white/5 p-4 lg:p-5 rounded-3xl border border-white/10 space-y-2 animate-fade hover:border-white/20 transition-colors">
+                                <label className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">Asientos</label>
+                                <div className="flex items-end gap-2">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={maxVoters}
+                                        onChange={(e) => setMaxVoters(parseInt(e.target.value) || 100)}
+                                        className="w-full bg-transparent text-2xl lg:text-3xl font-black text-white/60 outline-none"
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>
 
                     {type !== "WORDCLOUD" && (
-                        <div className="space-y-3">
-                            <label className="text-[8px] font-black text-white/40 uppercase tracking-widest">Opciones / Alternativas</label>
-                            <div className="grid grid-cols-1 gap-2 max-h-[160px] lg:max-h-none overflow-y-auto pr-2 custom-scroll">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] block ml-1">Alternativas</label>
+                            <div className="grid grid-cols-1 gap-3 max-h-[300px] lg:max-h-none overflow-y-auto pr-2 custom-scroll">
                                 {options.map((opt, i) => (
-                                    <div key={i} className="flex gap-2 group">
+                                    <div key={i} className="flex gap-3 group animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
+                                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shrink-0 font-black text-white/30">
+                                            {i + 1}
+                                        </div>
                                         <input
                                             type="text"
                                             value={opt}
@@ -170,11 +178,11 @@ export function CreateVotingForm() {
                                                 newOpts[i] = e.target.value;
                                                 setOptions(newOpts);
                                             }}
-                                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-[#FFC100] disabled:opacity-50"
+                                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 lg:px-6 py-2 lg:py-3 text-sm lg:text-base font-bold outline-none focus:border-[#2EB67D] focus:bg-white/10 transition-all disabled:opacity-50"
                                         />
                                         {type === "MULTIPLE" && options.length > 2 && (
-                                            <button type="button" onClick={() => setOptions(options.filter((_, idx) => idx !== i))} className="p-2 text-white/20 hover:text-red-500 transition-colors">
-                                                <LucideTrash2 className="w-4 h-4" />
+                                            <button type="button" onClick={() => setOptions(options.filter((_, idx) => idx !== i))} className="p-2 text-white/20 hover:text-[#C22359] transition-colors">
+                                                <LucideTrash2 className="w-5 h-5" />
                                             </button>
                                         )}
                                     </div>
@@ -183,31 +191,31 @@ export function CreateVotingForm() {
                                     <button
                                         type="button"
                                         onClick={() => setOptions([...options, ""])}
-                                        className="w-full py-2 border border-dashed border-white/10 rounded-xl text-[9px] lg:text-[10px] font-bold text-white/20 hover:text-white hover:border-white/30 transition-all uppercase"
+                                        className="w-full py-3 lg:py-4 border shadow-xl border-dashed border-white/10 rounded-2xl text-[10px] lg:text-[11px] font-black text-white/30 hover:text-white hover:border-white/40 hover:bg-white/5 transition-all uppercase tracking-widest mt-2"
                                     >
-                                        + AGREGAR ALTERNATIVA
+                                        + AÑADIR NUEVA POSIBILIDAD
                                     </button>
                                 )}
                             </div>
                         </div>
                     )}
 
-                    <div className="pt-2 grid grid-cols-2 gap-3">
+                    <div className="pt-2 grid grid-cols-2 gap-4">
                         <button
                             type="button"
                             onClick={() => setHideResults(!hideResults)}
-                            className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${hideResults ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40'}`}
+                            className={`flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all duration-300 ${hideResults ? 'bg-[#C22359] text-white border-[#C22359]' : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10'}`}
                         >
-                            <LucideEyeOff className="w-3 h-3" />
-                            <span className="text-[7px] lg:text-[8px] font-black uppercase">Ocultar Resultados</span>
+                            <LucideEyeOff className="w-4 h-4" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Ocultar Votos</span>
                         </button>
                         <button
                             type="button"
                             onClick={() => setAllowChange(!allowChange)}
-                            className={`flex items-center justify-center gap-2 p-3 rounded-xl border transition-all ${allowChange ? 'bg-[#FFC100] text-[#3A1B4E] border-[#FFC100]' : 'bg-white/5 border-white/10 text-white/40'}`}
+                            className={`flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all duration-300 ${allowChange ? 'bg-[#529CE8] text-white border-[#529CE8]' : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10'}`}
                         >
-                            <LucideRefreshCcw className="w-3 h-3" />
-                            <span className="text-[7px] lg:text-[8px] font-black uppercase">Permitir Edición</span>
+                            <LucideRefreshCcw className="w-4 h-4" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Cambiar Voto</span>
                         </button>
                     </div>
                 </div>
@@ -216,13 +224,14 @@ export function CreateVotingForm() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-4 bg-[#FFC100] text-[#3A1B4E] rounded-xl text-sm lg:text-base font-black transition-all hover:scale-[1.02] shadow-2xl uppercase tracking-[0.15em] lg:tracking-widest"
+                        className="w-full py-4 lg:py-5 bg-[#2EB67D] text-[#1A0826] rounded-2xl text-sm lg:text-base font-black transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(46,182,125,0.4)] uppercase tracking-[0.2em] relative overflow-hidden group shadow-2xl"
                     >
-                        {loading ? "ARCHIVANDO..." : "ARCHIVAR Y CONFIGURAR"}
+                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                        <span className="relative z-10">{loading ? "CREANDO..." : "CREAR Y LANZAR"}</span>
                     </button>
                 </div>
             </form>
-            <div className="text-center pb-8 opacity-10 text-[7px] font-black uppercase tracking-[1em]">version V2.9</div>
+            <div className="text-center pb-8 opacity-5 text-[7px] font-black uppercase tracking-[1.5em] relative z-10">hiveyoung scm v3.0</div>
         </div>
     );
 }
