@@ -37,11 +37,10 @@ const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: Wor
     }, [wv.count, prevCount]);
 
     const fontSize = useMemo(() => {
-        const baseSize = compact ? 10 : 16;
-        const growthFactor = compact ? 3 : 8;
-        const max = compact ? 32 : 72;
-        return Math.min(baseSize + (wv.count * growthFactor), max);
-    }, [wv.count, compact]);
+        const wordCount = style.zIndex || 1; // Hack: passing total words via zIndex or similar? No, better use a prop.
+        // Actually, let's just use the style.fontSize if we compute it in the parent.
+        return style.fontSize as number || (compact ? 12 : 16);
+    }, [style.fontSize, compact]);
 
     return (
         <span
@@ -76,9 +75,15 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             const centerX = 50;
             const centerY = 50;
 
+            // Dynamic scaling factor: as more words appear, everything shrinks slightly
+            // to avoid clutter and edge collisions.
+            const globalScale = Math.max(0.4, 1 - (sortedWords.length * 0.015));
+
             return sortedWords.map((wv, i) => {
-                const fontSize = compact ? 10 + (wv.count * 3) : 16 + (wv.count * 8);
-                const maxFontSize = compact ? 32 : 72;
+                const baseSize = compact ? 10 : 18;
+                const growthFactor = compact ? 4 : 10;
+                const fontSize = (baseSize + (wv.count - 1) * growthFactor) * globalScale;
+                const maxFontSize = compact ? 32 : 80;
                 const actualFontSize = Math.min(fontSize, maxFontSize);
 
                 // Determine rotation early to adjust bounding box
@@ -89,15 +94,15 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
 
                 // Estimate width and height (rough bounding box)
                 // We use a divisor to convert to roughly % of container
-                const rawW = (wv.text.length * actualFontSize * 0.5) / (compact ? 3 : 5);
-                const rawH = (actualFontSize * 1.0) / (compact ? 3 : 5);
+                const rawW = (wv.text.length * actualFontSize * 0.55) / (compact ? 3.5 : 6);
+                const rawH = (actualFontSize * 1.1) / (compact ? 3.5 : 6);
 
                 // If rotated 90deg, swap dimensions
                 const w = isVertical ? rawH : rawW;
                 const h = isVertical ? rawW : rawH;
 
                 // Add padding to prevent tight packing
-                const padding = compact ? 1.5 : 2.5;
+                const padding = compact ? 1.0 : 2.0;
                 const paddedW = w + padding;
                 const paddedH = h + padding;
 
@@ -105,16 +110,17 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 let y = centerY;
 
                 if (i > 0) {
-                    let angle = hash % 360; // Randomize start angle per word
-                    let radius = 2;
+                    let angle = (hash % 360) * (Math.PI / 180);
+                    let radius = 1;
                     let found = false;
-                    const step = 0.5;
-                    const angleStep = 0.2;
+                    const step = 0.4;
+                    const angleStep = 0.15;
 
                     // Spiral search for a free spot
-                    while (!found && radius < 45) {
+                    // Radius max reduced to 38 to keep a safety margin from screen edges
+                    while (!found && radius < 38) {
                         x = centerX + radius * Math.cos(angle);
-                        y = centerY + (radius * 0.6) * Math.sin(angle); // Elliptical spiral
+                        y = centerY + (radius * 0.55) * Math.sin(angle); // Elliptical spiral
 
                         // Check collision with padding
                         const currentRect = { x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH };
@@ -125,7 +131,10 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                                 currentRect.y > r.y + r.h);
                         });
 
-                        if (!hasCollision) {
+                        // Edge check to prevent clipping
+                        const isOutOfBounds = (x - w / 2 < 5) || (x + w / 2 > 95) || (y - h / 2 < 8) || (y + h / 2 > 92);
+
+                        if (!hasCollision && !isOutOfBounds) {
                             found = true;
                         } else {
                             angle += angleStep;
@@ -146,7 +155,8 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                     style: {
                         left: `${x}%`,
                         top: `${y}%`,
-                        transform: 'translate(-50%, -50%)'
+                        fontSize: actualFontSize,
+                        transform: 'translate(-50%, -50%)',
                     }
                 };
             });
