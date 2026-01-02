@@ -4,18 +4,9 @@ import React, { useMemo, useState, useEffect, useRef, useCallback } from "react"
 import { Poll, WordVote } from "@/types";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-// Paleta de colores definida por el usuario (excluyendo gris #343A40, pastel #F7A3B1 y morado oscuro #3A1B4E)
 const CHART_COLORS = [
-    "#3A1B4E", // Dark Purple
-    "#2EB67D", // Green
-    "#529CE8", // Blue
-    "#C22359", // Magenta/Red
-    "#FFC100", // Yellow
-    "#9063AD", // Lighter Purple
-    "#FC84AA", // Pink
-    "#EE6352", // Orange
-    "#343A40", // Dark Gray
-    "#F7A3B1", // Pastel Pink
+    "#3A1B4E", "#2EB67D", "#529CE8", "#C22359", "#FFC100",
+    "#9063AD", "#FC84AA", "#EE6352", "#343A40", "#F7A3B1",
 ];
 
 interface LiveResultsProps {
@@ -23,40 +14,20 @@ interface LiveResultsProps {
     compact?: boolean;
 }
 
-const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: WordVote, index: number, style: React.CSSProperties, color: string, rotation: string, compact: boolean }) => {
-    const [prevCount, setPrevCount] = useState(wv.count);
-    const [isPulsing, setIsPulsing] = useState(false);
-
-    useEffect(() => {
-        if (wv.count > prevCount) {
-            setIsPulsing(true);
-            const timer = setTimeout(() => setIsPulsing(false), 600);
-            setPrevCount(wv.count);
-            return () => clearTimeout(timer);
-        }
-    }, [wv.count, prevCount]);
-
-    const fontSize = useMemo(() => {
-        const wordCount = style.zIndex || 1; // Hack: passing total words via zIndex or similar? No, better use a prop.
-        // Actually, let's just use the style.fontSize if we compute it in the parent.
-        return style.fontSize as number || (compact ? 12 : 16);
-    }, [style.fontSize, compact]);
-
+const WordCloudItem = ({ wv, style, color, isBig }: { wv: WordVote, style: React.CSSProperties, color: string, isBig: boolean }) => {
     return (
         <span
             className={`
-                absolute font-bold transition-all duration-700 ease-out animate-fade
-                ${rotation}
-                ${isPulsing ? 'animate-pulse-word' : ''}
-                select-none
+                absolute font-black transition-all duration-1000 ease-out animate-fade 
+                select-none leading-[0.85] tracking-tighter
+                ${isBig ? 'z-20' : 'z-10'}
             `}
             style={{
                 ...style,
-                fontSize: `${fontSize}px`,
                 color: color,
-                animationDelay: `${index * 50}ms`,
                 whiteSpace: 'nowrap',
-                transform: `${style.transform} ${rotation === 'rotate-90' ? 'rotate(90deg)' : rotation === '-rotate-90' ? 'rotate(-90deg)' : ''}`
+                textShadow: 'none',
+                filter: 'none',
             }}
         >
             {wv.text}
@@ -64,212 +35,179 @@ const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: Wor
     );
 };
 
-export function LiveResults({ poll, compact = false }: LiveResultsProps) {
-    const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
-    const containerRef = useRef<HTMLDivElement>(null);
+const WordCloudView = ({ poll, compact, transform, isDragging, handleWheel, handleMouseDown, containerRef }: any) => {
+    const sortedWords = useMemo(() =>
+        [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
+        [poll.wordVotes]);
 
-    const handleWheel = (e: React.WheelEvent) => {
-        if (compact) return;
-        e.preventDefault(); // Prevent page scroll
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        setTransform(prev => ({
-            ...prev,
-            scale: Math.max(0.1, Math.min(5, prev.scale * delta))
-        }));
-    };
+    const positionedWords = useMemo(() => {
+        if (sortedWords.length === 0) return [];
 
-    const handleMouseDown = (e: React.MouseEvent) => {
-        if (compact) return;
-        setIsDragging(true);
-        setLastMousePos({ x: e.clientX, y: e.clientY });
-    };
+        const placedRects: { x: number, y: number, w: number, h: number }[] = [];
+        const centerX = 50;
+        const centerY = 50;
 
-    const handleMouseMove = useCallback((e: MouseEvent) => {
-        if (!isDragging) return;
-        const dx = e.clientX - lastMousePos.x;
-        const dy = e.clientY - lastMousePos.y;
-        setTransform(prev => ({
-            ...prev,
-            x: prev.x + dx,
-            y: prev.y + dy
-        }));
-        setLastMousePos({ x: e.clientX, y: e.clientY });
-    }, [isDragging, lastMousePos]);
+        // Grid Occupancy Map (discrete 100x100 grid for perfect collision)
+        // We actually use a higher resolution grid for precision 200x200
+        const gridRes = 200;
+        const occupied = Array(gridRes).fill(null).map(() => new Uint8Array(gridRes));
 
-    const handleMouseUp = useCallback(() => {
-        setIsDragging(false);
-    }, []);
+        return sortedWords.map((wv, i) => {
+            const maxCount = sortedWords[0]?.count || 1;
+            const freqRatio = wv.count / maxCount;
 
-    useEffect(() => {
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        } else {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        }
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, handleMouseMove, handleMouseUp]);
+            // 1. Font Size Calibration (More aggressive center)
+            let baseSize = compact ? 12 : 26;
+            let maxSize = compact ? 30 : 130;
+            let fontSize = baseSize + (maxSize - baseSize) * Math.pow(freqRatio, 0.45);
 
-    if (poll.type === "WORDCLOUD") {
-        const sortedWords = useMemo(() =>
-            [...(poll.wordVotes || [])].sort((a, b) => b.count - a.count),
-            [poll.wordVotes]);
+            // Long words protection
+            if (wv.text.length > 10) fontSize *= 0.9;
+            if (wv.text.length > 20) fontSize *= 0.75;
 
-        const positionedWords = useMemo(() => {
-            const placedRects: { x: number; y: number; w: number; h: number }[] = [];
-            const centerX = 50;
-            const centerY = 50;
+            // 2. Box size in Grid Units
+            const pFactor = compact ? 0.6 : 0.32;
+            const w = Math.ceil((wv.text.length * fontSize * 0.58) * pFactor);
+            const h = Math.ceil((fontSize * 0.95) * pFactor);
 
-            // When pan/zoom is enabled, we can spread words much further (scale factor)
-            const globalScale = compact ? 0.8 : 1.2;
+            // Mandatory "Air" padding (TIGHTER: Removed x3 and x2 multipliers)
+            const padding = Math.max(1, Math.floor(h * 0.15));
+            const pw = w + padding;
+            const ph = h + padding;
 
-            return sortedWords.map((wv, i) => {
-                const baseSize = compact ? 12 : 24;
-                const minFontSize = compact ? 10 : 16;
-                const maxFontSize = compact ? 28 : 120; // Increased max size since user can zoom out
+            // 3. Digital Packing Search (Center-Out Outward Search)
+            let found = false;
+            let finalX = centerX;
+            let finalY = centerY;
 
-                const calculatedSize = (baseSize + (wv.count - 1) * (compact ? 3 : 12)) * globalScale;
-                const actualFontSize = Math.max(minFontSize, Math.min(calculatedSize, maxFontSize));
+            // High Precision Spiral Search
+            let angle = (i * 2.4) % (2 * Math.PI);
+            let radius = 0;
+            const radiusStep = 0.5; // Finer Steps
+            const angleStep = 0.1;  // Higher Precision
 
-                const hash = wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
-                const rotation = i === 0 ? 'rotate-0' : rotOptions[hash % rotOptions.length];
-                const isVertical = rotation === 'rotate-90' || rotation === '-rotate-90';
+            if (i > 0) {
+                let attempts = 0;
+                while (!found && attempts < 5000) {
+                    // Ellipse: 1.6x for a more natural screen fit without over-spreading
+                    const vx = Math.round(gridRes / 2 + radius * Math.cos(angle) * 1.6);
+                    const vy = Math.round(gridRes / 2 + radius * Math.sin(angle));
 
-                // Estimate width and height (Generous bounding box)
-                // Width factor 0.8 and height 1.6 for Poppins Bold
-                // Increased divisors to better represent percentage of screen
-                const rawW = (wv.text.length * actualFontSize * 0.85) / (compact ? 4 : 8.5);
-                const rawH = (actualFontSize * 1.8) / (compact ? 4 : 8.5);
+                    // Check if block is inside grid and free
+                    if (vx - pw / 2 >= 0 && vx + pw / 2 < gridRes && vy - ph / 2 >= 0 && vy + ph / 2 < gridRes) {
+                        let collision = false;
+                        const startX = Math.floor(vx - pw / 2);
+                        const startY = Math.floor(vy - ph / 2);
 
-                const w = isVertical ? rawH : rawW;
-                const h = isVertical ? rawW : rawH;
+                        // Grid Collision Check
+                        for (let r = startY; r < startY + ph; r++) {
+                            for (let c = startX; c < startX + pw; c++) {
+                                if (occupied[r][c]) {
+                                    collision = true;
+                                    break;
+                                }
+                            }
+                            if (collision) break;
+                        }
 
-                // Significant padding to ensure breathability
-                const padding = (compact ? 2.0 : 5.0) + (actualFontSize / 10);
-                const paddedW = w + padding;
-                const paddedH = h + padding;
-
-                let x = centerX;
-                let y = centerY;
-
-                if (i > 0) {
-                    // Randomize start angle slightly per word to avoid "aligned" gaps
-                    let angle = (hash % 100) * (Math.PI / 50);
-                    let radius = 1;
-                    let found = false;
-                    const step = 0.4; // Slightly less dense for faster performance and wider spread
-                    const angleStep = 0.12;
-
-                    // Spiral search for a free spot
-                    while (!found && radius < (compact ? 45 : 200)) {
-                        // Ellipse ratio 0.55 for cinematic/desktop views
-                        x = centerX + radius * Math.cos(angle);
-                        y = centerY + (radius * 0.6) * Math.sin(angle);
-
-                        const currentRect = { x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH };
-                        const hasCollision = placedRects.some(r => {
-                            return !(currentRect.x + currentRect.w < r.x ||
-                                currentRect.x > r.x + r.w ||
-                                currentRect.y + currentRect.h < r.y ||
-                                currentRect.y > r.y + r.h);
-                        });
-
-                        if (!hasCollision) {
+                        if (!collision) {
+                            // Mark grid occupied
+                            for (let r = startY; r < startY + ph; r++) {
+                                for (let c = startX; c < startX + pw; c++) {
+                                    occupied[r][c] = 1;
+                                }
+                            }
+                            finalX = (vx / gridRes) * 100;
+                            finalY = (vy / gridRes) * 100;
                             found = true;
-                        } else {
-                            angle += angleStep;
-                            radius += step / (2 * Math.PI);
                         }
                     }
+
+                    angle += angleStep;
+                    radius += radiusStep / 20;
+                    attempts++;
                 }
-
-                placedRects.push({ x: x - paddedW / 2, y: y - paddedH / 2, w: paddedW, h: paddedH });
-                const colorIndex = i % CHART_COLORS.length;
-
-                return {
-                    wv,
-                    color: CHART_COLORS[colorIndex],
-                    rotation,
-                    style: {
-                        left: `${x}%`,
-                        top: `${y}%`,
-                        fontSize: actualFontSize,
-                        transform: 'translate(-50%, -50%)',
+            } else {
+                // First word: Center it and mark grid
+                const startX = Math.floor((gridRes / 2) - pw / 2);
+                const startY = Math.floor((gridRes / 2) - ph / 2);
+                for (let r = startY; r < startY + ph; r++) {
+                    for (let c = startX; c < startX + pw; c++) {
+                        occupied[r][c] = 1;
                     }
-                };
-            });
-        }, [sortedWords, compact]);
+                }
+                found = true;
+            }
 
-        return (
+            return {
+                wv,
+                color: CHART_COLORS[i % CHART_COLORS.length],
+                style: {
+                    left: `${finalX}%`,
+                    top: `${finalY}%`,
+                    fontSize: `${fontSize}px`,
+                    transform: 'translate(-50%, -50%)',
+                }
+            };
+        });
+    }, [sortedWords, compact]);
+
+    return (
+        <div
+            ref={containerRef}
+            className={`absolute inset-0 overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} bg-[#F4EDE4] flex items-center justify-center`}
+            style={{
+                fontFamily: "var(--font-poppins), sans-serif",
+                touchAction: 'none'
+            }}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+        >
             <div
-                ref={containerRef}
-                className={`absolute inset-0 overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                className="relative w-full h-full transition-transform duration-700 ease-out"
                 style={{
-                    fontFamily: "var(--font-poppins), sans-serif",
-                    backgroundColor: "#F4EDE4",
-                    touchAction: 'none'
+                    transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+                    transformOrigin: '50% 50%'
                 }}
-                onWheel={handleWheel}
-                onMouseDown={handleMouseDown}
             >
-                <div
-                    className="relative w-full h-full transition-transform duration-100 ease-out"
-                    style={{
-                        transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-                        transformOrigin: 'center center'
-                    }}
-                >
-                    {positionedWords.map((item, i) => (
-                        <WordCloudItem
-                            key={item.wv.text}
-                            wv={item.wv}
-                            index={i}
-                            style={item.style}
-                            color={item.color}
-                            rotation={item.rotation}
-                            compact={compact}
-                        />
-                    ))}
-                </div>
-
-                {!compact && (
-                    <div className="absolute bottom-10 right-10 flex flex-col gap-2 pointer-events-none opacity-30 select-none">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#3A1B4E]">Drag para mover</p>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#3A1B4E]">Scroll para zoom</p>
-                    </div>
-                )}
-
-                {(!poll.wordVotes || poll.wordVotes.length === 0) && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 animate-fade">
-                        <div className="w-12 h-12 rounded-full border-4 border-[#3A1B4E]/5 border-t-[#3A1B4E]/20 animate-spin" />
-                        <p className="text-[12px] font-black uppercase tracking-[0.5em] text-[#3A1B4E]/20">Capturando ideas...</p>
-                    </div>
-                )}
+                {positionedWords.map((item, i) => (
+                    <WordCloudItem
+                        key={`${item.wv.text}-${i}`}
+                        wv={item.wv}
+                        style={item.style}
+                        color={item.color}
+                        isBig={item.wv.count > 1}
+                    />
+                ))}
             </div>
-        );
-    }
 
-    const data = poll.options.map((opt, i) => {
-        return {
-            name: opt.text,
-            value: opt.votes || 0,
-            color: poll.type === 'BOOLEAN'
-                ? (() => {
-                    const t = opt.text.toUpperCase();
-                    if (t.includes('SÍ') || t.includes('FAVOR')) return '#2EB67D';
-                    if (t.includes('ABSTENCIÓN') || t.includes('ABSTENCION')) return '#FFC100';
-                    return '#C22359';
-                })()
-                : (opt.color || CHART_COLORS[i % CHART_COLORS.length])
-        };
-    }).sort((a, b) => b.value - a.value);
+            {!compact && (
+                <div className="absolute bottom-6 left-6 pointer-events-none opacity-20 flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1A0826] animate-pulse" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3A1B4E]">Distribución Orgánica Activa</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ChartView = ({ poll, compact }: { poll: Poll, compact: boolean }) => {
+    const data = useMemo(() => {
+        return poll.options.map((opt, i) => {
+            return {
+                name: opt.text,
+                value: opt.votes || 0,
+                color: poll.type === 'BOOLEAN'
+                    ? (() => {
+                        const t = opt.text.toUpperCase();
+                        if (t.includes('SÍ') || t.includes('FAVOR')) return '#2EB67D';
+                        if (t.includes('ABSTENCIÓN') || t.includes('ABSTENCION')) return '#FFC100';
+                        return '#C22359';
+                    })()
+                    : (opt.color || CHART_COLORS[i % CHART_COLORS.length])
+            };
+        }).sort((a, b) => b.value - a.value);
+    }, [poll.options, poll.type]);
 
     return (
         <div className="w-full h-full flex flex-col items-center justify-center relative min-h-[250px] p-4">
@@ -301,7 +239,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
                     <span className="block text-[8px] font-black text-white/20 uppercase tracking-widest mb-1">Tendencia</span>
                     <span className={compact ? "text-xl font-black text-white tabular-nums" : "text-3xl font-black text-white tabular-nums"}>
-                        {Math.round((data[0].value / poll.totalVotes) * 100)}%
+                        {Math.round((data[0].value / (poll.totalVotes || 1)) * 100)}%
                     </span>
                     <span className="block text-[9px] font-bold text-white/40 uppercase mt-1 truncate px-10">{data[0].name}</span>
                 </div>
@@ -321,4 +259,72 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             )}
         </div>
     );
+};
+
+export function LiveResults({ poll, compact = false }: LiveResultsProps) {
+    const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const handleWheel = (e: React.WheelEvent) => {
+        if (compact) return;
+        const delta = e.deltaY > 0 ? 0.92 : 1.08;
+        setTransform(prev => ({
+            ...prev,
+            scale: Math.max(0.1, Math.min(5, prev.scale * delta))
+        }));
+    };
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (compact) return;
+        setIsDragging(true);
+        setLastMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!isDragging) return;
+        const dx = (e.clientX - lastMousePos.x);
+        const dy = (e.clientY - lastMousePos.y);
+        setTransform(prev => ({
+            ...prev,
+            x: prev.x + dx,
+            y: prev.y + dy
+        }));
+        setLastMousePos({ x: e.clientX, y: e.clientY });
+    }, [isDragging, lastMousePos]);
+
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
+
+    useEffect(() => {
+        if (isDragging) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+        } else {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging, handleMouseMove, handleMouseUp]);
+
+    if (poll.type === "WORDCLOUD") {
+        return (
+            <WordCloudView
+                poll={poll}
+                compact={compact}
+                transform={transform}
+                isDragging={isDragging}
+                handleWheel={handleWheel}
+                handleMouseDown={handleMouseDown}
+                containerRef={containerRef}
+            />
+        );
+    }
+
+    return <ChartView poll={poll} compact={compact} />;
 }
