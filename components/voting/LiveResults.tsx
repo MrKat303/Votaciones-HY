@@ -6,13 +6,16 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recha
 
 // Paleta de colores definida por el usuario (excluyendo gris #343A40, pastel #F7A3B1 y morado oscuro #3A1B4E)
 const CHART_COLORS = [
+    "#3A1B4E", // Dark Purple
     "#2EB67D", // Green
     "#529CE8", // Blue
-    "#C22359", // Red/Pink
+    "#C22359", // Magenta/Red
     "#FFC100", // Yellow
     "#9063AD", // Lighter Purple
     "#FC84AA", // Pink
     "#EE6352", // Orange
+    "#343A40", // Dark Gray
+    "#F7A3B1", // Pastel Pink
 ];
 
 interface LiveResultsProps {
@@ -20,11 +23,9 @@ interface LiveResultsProps {
     compact?: boolean;
 }
 
-const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: number, style: React.CSSProperties, compact: boolean }) => {
+const WordCloudItem = ({ wv, index, style, color, compact }: { wv: WordVote, index: number, style: React.CSSProperties, color: string, compact: boolean }) => {
     const [prevCount, setPrevCount] = useState(wv.count);
     const [isPulsing, setIsPulsing] = useState(false);
-
-    const COLORS = CHART_COLORS;
 
     useEffect(() => {
         if (wv.count > prevCount) {
@@ -44,17 +45,16 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     }, [hash, index]);
 
     const fontSize = useMemo(() => {
-        // Fuente adaptativa para no saturar pantallas pequeñas
-        const baseSize = compact ? 8 : 12;
-        const growthFactor = compact ? 2 : 5;
-        const max = compact ? 24 : 60;
+        const baseSize = compact ? 10 : 16;
+        const growthFactor = compact ? 3 : 8;
+        const max = compact ? 32 : 72;
         return Math.min(baseSize + (wv.count * growthFactor), max);
     }, [wv.count, compact]);
 
     return (
         <span
             className={`
-                absolute font-bold transition-all duration-1000 ease-in-out animate-fade organic-float
+                absolute font-bold transition-all duration-700 ease-out animate-fade organic-float
                 ${rotation}
                 ${isPulsing ? 'animate-pulse-word' : ''}
                 select-none
@@ -62,8 +62,8 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
             style={{
                 ...style,
                 fontSize: `${fontSize}px`,
-                color: COLORS[hash % COLORS.length],
-                animationDelay: `${index * 80}ms`,
+                color: color,
+                animationDelay: `${index * 50}ms`,
                 whiteSpace: 'nowrap',
                 transform: `${style.transform} ${rotation === 'rotate-90' ? 'rotate(90deg)' : rotation === '-rotate-90' ? 'rotate(-90deg)' : ''}`
             }}
@@ -80,25 +80,60 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             [poll.wordVotes]);
 
         const positionedWords = useMemo(() => {
+            const placedRects: { x: number; y: number; w: number; h: number }[] = [];
             const centerX = 50;
             const centerY = 50;
-            const goldenAngle = 137.5 * (Math.PI / 180);
 
             return sortedWords.map((wv, i) => {
-                if (i === 0) return { wv, style: { left: '50%', top: '48%', transform: 'translate(-50%, -50%)' } };
+                const fontSize = compact ? 10 + (wv.count * 3) : 16 + (wv.count * 8);
+                const maxFontSize = compact ? 32 : 72;
+                const actualFontSize = Math.min(fontSize, maxFontSize);
 
-                // Radio de seguridad estricto para evitar colisiones con bordes
-                // Aumentamos el spread para evitar que se toquen (compact: 4->7, normal: 8->13)
-                const spread = compact ? 7 : 13;
-                const radius = Math.pow(i, 0.65) * spread;
-                const safeRadius = Math.min(radius, 42);
+                // Estimate width and height (rough bounding box)
+                const w = (wv.text.length * actualFontSize * 0.6) / (compact ? 3 : 5); // % of container width
+                const h = (actualFontSize * 1.2) / (compact ? 3 : 5); // % of container height
 
-                const angle = i * goldenAngle;
-                const x = centerX + safeRadius * Math.cos(angle);
-                const y = centerY + (safeRadius * 0.7) * Math.sin(angle);
+                let x = centerX;
+                let y = centerY;
+
+                if (i > 0) {
+                    let angle = 0;
+                    let radius = 2;
+                    let found = false;
+                    const step = 0.5;
+                    const angleStep = 0.3;
+
+                    // Spiral search for a free spot
+                    while (!found && radius < 45) {
+                        x = centerX + radius * Math.cos(angle);
+                        y = centerY + (radius * 0.6) * Math.sin(angle); // Elliptical spiral
+
+                        // Check collision
+                        const currentRect = { x: x - w / 2, y: y - h / 2, w, h };
+                        const hasCollision = placedRects.some(r => {
+                            return !(currentRect.x + currentRect.w < r.x ||
+                                currentRect.x > r.x + r.w ||
+                                currentRect.y + currentRect.h < r.y ||
+                                currentRect.y > r.y + r.h);
+                        });
+
+                        if (!hasCollision) {
+                            found = true;
+                        } else {
+                            angle += angleStep;
+                            radius += step / (2 * Math.PI);
+                        }
+                    }
+                }
+
+                placedRects.push({ x: x - w / 2, y: y - h / 2, w, h });
+
+                // Balanced color assignment
+                const colorIndex = i % CHART_COLORS.length;
 
                 return {
                     wv,
+                    color: CHART_COLORS[colorIndex],
                     style: {
                         left: `${x}%`,
                         top: `${y}%`,
@@ -123,6 +158,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                             wv={item.wv}
                             index={i}
                             style={item.style}
+                            color={item.color}
                             compact={compact}
                         />
                     ))}
