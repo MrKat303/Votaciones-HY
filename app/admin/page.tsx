@@ -9,6 +9,8 @@ import { CountdownTimer } from "@/components/voting/CountdownTimer";
 import Link from "next/link";
 import { LucideBarChart3, LucideUsers, LucideRefreshCw, LucideLayoutGrid, LucidePieChart, LucideExternalLink, LucidePlay, LucideHistory, LucideArchive, LucideTrash2, LucideAlertCircle, LucideType, LucideX, LucideQrCode, LucideEye, LucideEyeOff } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function AdminPage() {
     const [polls, setPolls] = useState<Poll[]>([]);
@@ -18,11 +20,19 @@ export default function AdminPage() {
     const [lastPollSummary, setLastPollSummary] = useState<Poll | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [fullscreenResults, setFullscreenResults] = useState(false);
+    const { admin, loading: authLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!authLoading && !admin) {
+            router.push("/admin/login");
+        }
+    }, [admin, authLoading, router]);
 
     const fetchPolls = async () => {
-        if (isProcessing) return;
+        if (isProcessing || !admin) return;
         try {
-            const allPolls = await api.getPolls();
+            const allPolls = await api.getPolls(admin.id);
             setPolls(allPolls);
 
             const active = allPolls.find(p => p.status === "ACTIVE");
@@ -35,10 +45,12 @@ export default function AdminPage() {
     };
 
     useEffect(() => {
-        fetchPolls();
-        const interval = setInterval(fetchPolls, 2000);
-        return () => clearInterval(interval);
-    }, [selectedPollId]);
+        if (admin) {
+            fetchPolls();
+            const interval = setInterval(fetchPolls, 2000);
+            return () => clearInterval(interval);
+        }
+    }, [selectedPollId, admin]);
 
     const handleLaunchPoll = async (id: string, duration: number) => {
         await api.startPoll(id, duration);
@@ -79,11 +91,13 @@ export default function AdminPage() {
     const draftPolls = polls.filter(p => p.status === "DRAFT");
     const closedPolls = polls.filter(p => p.status === "CLOSED");
 
-    if (loading) return (
+    if (loading || authLoading) return (
         <div className="fixed inset-0 bg-[#3A1B4E] flex items-center justify-center">
             <div className="w-5 h-5 border-2 border-[#FFC100] border-t-transparent rounded-full animate-spin" />
         </div>
     );
+
+    if (!admin) return null; // Wait for redirect
 
     return (
         <div className="fixed inset-0 bg-[#3A1B4E] text-white flex flex-col overflow-hidden">
@@ -252,6 +266,7 @@ export default function AdminPage() {
                         Sala Pública <LucideExternalLink className="w-3 h-3" />
                     </Link>
                     <Link href="/" className="text-[10px] font-bold text-[#C22359] hover:text-white uppercase">Salir</Link>
+                    <span className="text-[10px] text-white/40 font-mono">{admin.rut}</span>
                 </div>
             </nav>
 

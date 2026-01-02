@@ -4,6 +4,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Poll, WordVote } from "@/types";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
+// Paleta de colores definida por el usuario (excluyendo gris #343A40, pastel #F7A3B1 y morado oscuro #3A1B4E)
+const CHART_COLORS = [
+    "#2EB67D", // Green
+    "#529CE8", // Blue
+    "#C22359", // Red/Pink
+    "#FFC100", // Yellow
+    "#9063AD", // Lighter Purple
+    "#FC84AA", // Pink
+    "#EE6352", // Orange
+];
+
 interface LiveResultsProps {
     poll: Poll;
     compact?: boolean;
@@ -13,10 +24,7 @@ const WordCloudItem = ({ wv, index, style, compact }: { wv: WordVote, index: num
     const [prevCount, setPrevCount] = useState(wv.count);
     const [isPulsing, setIsPulsing] = useState(false);
 
-    const COLORS = [
-        "#3A1B4E", "#2EB67D", "#529CE8", "#C22359", "#FFC100",
-        "#9063AD", "#FC84AA", "#EE6352", "#343A40", "#F7A3B1"
-    ];
+    const COLORS = CHART_COLORS;
 
     useEffect(() => {
         if (wv.count > prevCount) {
@@ -140,7 +148,7 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
                     if (t.includes('ABSTENCIÓN') || t.includes('ABSTENCION')) return '#FFC100';
                     return '#C22359';
                 })()
-                : (opt.color || `hsl(${(i * 360) / poll.options.length}, 70%, 50%)`)
+                : (opt.color || CHART_COLORS[i % CHART_COLORS.length])
         };
     }).sort((a, b) => b.value - a.value);
 

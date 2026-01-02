@@ -2,8 +2,8 @@ import { Poll, VotePayload, Option, PollType, WordVote } from "@/types";
 import { supabase } from "./supabase";
 
 export const api = {
-    getPolls: async (): Promise<Poll[]> => {
-        const { data, error } = await supabase
+    getPolls: async (adminId?: string): Promise<Poll[]> => {
+        let query = supabase
             .from('polls')
             .select(`
                 *,
@@ -11,6 +11,12 @@ export const api = {
                 poll_word_votes (*)
             `)
             .order('created_at', { ascending: false });
+
+        if (adminId) {
+            query = query.eq('admin_id', adminId);
+        }
+
+        const { data, error } = await query;
 
         if (error) {
             console.error("Error fetching polls:", error);
@@ -126,7 +132,8 @@ export const api = {
         type: PollType,
         customOptions: string[],
         maxVoters: number = 100,
-        settings = { hideResults: false, allowEdit: false }
+        settings = { hideResults: false, allowEdit: false },
+        adminId?: string
     ): Promise<Poll> => {
         // 1. Crear la votativa principal
         const { data: poll, error: pollError } = await supabase
@@ -137,7 +144,8 @@ export const api = {
                 status: 'DRAFT',
                 max_voters: maxVoters,
                 hide_results: settings.hideResults,
-                allow_edit: settings.allowEdit
+                allow_edit: settings.allowEdit,
+                admin_id: adminId
             })
             .select()
             .single();
@@ -268,5 +276,20 @@ export const api = {
     resetSystem: async () => {
         // Peligroso: Borra todo
         await supabase.from('polls').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    },
+
+    loginAdmin: async (rut: string, pass: string): Promise<{ success: boolean, admin?: { id: string, rut: string } }> => {
+        const { data, error } = await supabase
+            .rpc('login_admin', { _rut: rut, _password: pass });
+
+        if (error) {
+            console.error("Login error:", error);
+            return { success: false };
+        }
+
+        if (data && data.success) {
+            return { success: true, admin: { id: data.id, rut: data.rut } };
+        }
+        return { success: false };
     }
 };

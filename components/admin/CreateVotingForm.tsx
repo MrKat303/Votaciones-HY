@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { PollType } from "@/types";
 import { LucideX, LucideArrowLeft, LucideShieldCheck, LucideEyeOff, LucideRefreshCcw, LucideCheckCircle2, LucideLayoutGrid, LucidePieChart, LucideType, LucideTrash2 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 
 export function CreateVotingForm() {
     const [title, setTitle] = useState("");
@@ -18,8 +19,13 @@ export function CreateVotingForm() {
     // Opciones adicionales
     const [hideResults, setHideResults] = useState(false);
     const [allowChange, setAllowChange] = useState(false);
-
+    const { admin, loading: authLoading } = useAuth();
     const router = useRouter();
+
+    if (!authLoading && !admin) {
+        router.push("/admin/login");
+        return null;
+    }
 
     const handleTypeChange = (newType: PollType) => {
         setType(newType);
@@ -54,7 +60,7 @@ export function CreateVotingForm() {
         if (type !== "WORDCLOUD" && options.some(opt => !opt.trim())) return;
         setLoading(true);
         try {
-            await api.createPoll(title, duration, type, options, maxVoters, { hideResults, allowEdit: allowChange });
+            await api.createPoll(title, duration, type, options, maxVoters, { hideResults, allowEdit: allowChange }, admin?.id);
             router.push("/admin");
         } catch (error) {
             console.error(error);
