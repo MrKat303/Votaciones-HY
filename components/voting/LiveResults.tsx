@@ -45,7 +45,7 @@ const WordCloudItem = ({ wv, index, style, color, rotation, compact }: { wv: Wor
     return (
         <span
             className={`
-                absolute font-bold transition-all duration-700 ease-out animate-fade organic-float
+                absolute font-bold transition-all duration-700 ease-out animate-fade
                 ${rotation}
                 ${isPulsing ? 'animate-pulse-word' : ''}
                 select-none
@@ -76,33 +76,34 @@ export function LiveResults({ poll, compact = false }: LiveResultsProps) {
             const centerY = 50;
 
             // Dynamic scaling factor: as more words appear, everything shrinks slightly
-            // to avoid clutter and edge collisions.
-            const globalScale = Math.max(0.4, 1 - (sortedWords.length * 0.015));
+            // but we keep it within a readable range.
+            const globalScale = Math.max(0.5, 1 - (sortedWords.length * 0.012));
 
             return sortedWords.map((wv, i) => {
-                const baseSize = compact ? 10 : 18;
-                const growthFactor = compact ? 4 : 10;
-                const fontSize = (baseSize + (wv.count - 1) * growthFactor) * globalScale;
-                const maxFontSize = compact ? 32 : 80;
-                const actualFontSize = Math.min(fontSize, maxFontSize);
+                const baseSize = compact ? 12 : 20;
+                const minFontSize = compact ? 10 : 14;
+                const maxFontSize = compact ? 28 : 64; // Reduced max font size from 80 to 64
 
-                // Determine rotation early to adjust bounding box
+                const calculatedSize = (baseSize + (wv.count - 1) * (compact ? 3 : 8)) * globalScale;
+                const actualFontSize = Math.max(minFontSize, Math.min(calculatedSize, maxFontSize));
+
+                // Determine rotation
                 const hash = wv.text.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                 const rotOptions = ['rotate-0', 'rotate-0', 'rotate-0', 'rotate-90', '-rotate-90'];
                 const rotation = i === 0 ? 'rotate-0' : rotOptions[hash % rotOptions.length];
                 const isVertical = rotation === 'rotate-90' || rotation === '-rotate-90';
 
-                // Estimate width and height (rough bounding box)
-                // We use a divisor to convert to roughly % of container
-                const rawW = (wv.text.length * actualFontSize * 0.55) / (compact ? 3.5 : 6);
-                const rawH = (actualFontSize * 1.1) / (compact ? 3.5 : 6);
+                // Estimate width and height
+                // Using 0.6 for width factor to be safer
+                const rawW = (wv.text.length * actualFontSize * 0.6) / (compact ? 3.5 : 6.5);
+                const rawH = (actualFontSize * 1.2) / (compact ? 3.5 : 6.5);
 
                 // If rotated 90deg, swap dimensions
                 const w = isVertical ? rawH : rawW;
                 const h = isVertical ? rawW : rawH;
 
-                // Add padding to prevent tight packing
-                const padding = compact ? 1.0 : 2.0;
+                // Dynamic padding: larger words get more padding
+                const padding = (compact ? 1.0 : 2.0) + (actualFontSize / 20);
                 const paddedW = w + padding;
                 const paddedH = h + padding;
 
